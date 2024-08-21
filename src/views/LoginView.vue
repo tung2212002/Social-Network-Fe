@@ -120,7 +120,7 @@ a {
 .container {
     max-width: 600px;
     width: 100%;
-    background-color: #000;
+    background-color: #0e0d0d;
     padding: 30px 20px;
     border-radius: 16px;
     display: flex;
