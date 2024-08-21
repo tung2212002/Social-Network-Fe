@@ -1,29 +1,10 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, useRouter } from 'vue-router';
 import DefaultLayout from '@/layouts/DefaultLayout.vue';
 import { publicRoutes, privateRoutes } from './router';
 import { useUserStore } from '@/stores';
 import { NotFoundPage } from '@/views';
+import route from '@/constants/route';
 
-// Define a common guard function
-const authGuard = async (to, from, next, isPrivate, restricted) => {
-    console.log('authGuard');
-    const userStore = useUserStore();
-    if (!userStore.isAuthenticated && isPrivate) {
-        await userStore.fetchUser();
-        console.log('Authenticated');
-        if (!userStore.isAuthenticated) {
-            next('/login');
-        } else {
-            next();
-        }
-    } else if (restricted && !userStore.isAuthenticated) {
-        next('/login');
-    } else {
-        next();
-    }
-};
-
-// Define the router
 const router = createRouter({
     history: createWebHistory(),
     routes: [
@@ -33,10 +14,7 @@ const router = createRouter({
             meta: {
                 layout: route.layout || DefaultLayout,
                 restricted: route.restricted,
-            },
-            beforeEnter: (to, from, next) => {
-                console.log('Entering1', to, from, next);
-                authGuard(to, from, next, false, route.restricted);
+                isPrivate: route.isPrivate,
             },
         })),
         ...privateRoutes.map((route) => ({
@@ -47,15 +25,35 @@ const router = createRouter({
                 isPrivate: route.isPrivate,
                 restricted: route.restricted,
             },
-            beforeEnter: (to, from, next) => {
-                authGuard(to, from, next, route.isPrivate, route.restricted);
-            },
         })),
         {
             path: '/:pathMatch(.*)*',
             component: NotFoundPage,
         },
     ],
+});
+
+router.beforeEach(async (to, from, next) => {
+    const userStore = useUserStore();
+    try {
+        console.log('Entering5', to, from, next);
+        await userStore.fetchUser();
+        console.log(!userStore.user);
+
+        if (!userStore.user && to.meta.isPrivate) {
+            console.log('Entering6', to, from, next);
+            next(route.LOGINPAGE);
+        } else if ((to.path === route.LOGINPAGE || to.path === route.REGISTERPAGE) && userStore.user) {
+            console.log('Entering8', to, from, next);
+            next(route.HOMEPAGE);
+        } else {
+            console.log('Entering7', to, from, next);
+            next();
+        }
+    } catch (error) {
+        console.error('Error during token verification:', error);
+        next(route.LOGINPAGE);
+    }
 });
 
 export default router;

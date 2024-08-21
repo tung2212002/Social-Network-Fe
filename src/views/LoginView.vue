@@ -2,25 +2,22 @@
 <template>
     <div class="container">
         <div class="header">
-            <div class="close_button">
-                <i class="ri-close-fill"></i>
-            </div>
             <div class="logo">
                 <i class="ri-twitter-x-fill"></i>
             </div>
         </div>
 
         <div class="content">
-            <h1>Log in to X</h1>
+            <h1>Đăng nhập vào X</h1>
 
             <div class="sign_in_buttons">
                 <button class="primary sign_in">
                     <object :data="icons.googleSVG"></object>
-                    <span class="login_social_button">Sign in with Google</span>
+                    <span class="login_social_button">Đăng nhập bằng Google</span>
                 </button>
                 <button class="primary sign_in">
                     <object :data="icons.appleSVG"></object>
-                    <span class="login_social_button">Sign in with Apple</span>
+                    <span class="login_social_button">Đăng nhập bằng Apple</span>
                 </button>
             </div>
 
@@ -29,53 +26,83 @@
             </div>
 
             <div class="email_label">
-                <input type="text" id="log_in" placeholder="email, username" />
-                <label for="log_in">Telephone, email, username</label>
+                <FormKit type="text" class="email_input" label="Username" id="log_in" v-model="state.userEmail" style="height: 50px" />
+            </div>
+
+            <div class="password_label">
+                <InputPassword v-model:value="state.password" toggleMask class="custom-input-password" placeholder="Password" />
             </div>
 
             <div class="sign_up_buttons">
-                <button class="primary sign_up">Next</button>
-                <button class="secondary sign_up">Forgot Password?</button>
+                <button class="primary sign_up" @click="handleLogin">Đăng nhập</button>
+                <button class="secondary sign_up">Quên mật khẩu?</button>
             </div>
         </div>
 
         <div class="register">
-            <p>Don’t have an account? <a href="#">Sign up</a></p>
+            <p>Bạn chưa có tài khoản? <RouterLink :to="route.REGISTERPAGE">Đăng ký</RouterLink></p>
         </div>
+
+        <!-- <Toast /> -->
     </div>
 </template>
 
 <script setup>
+import { InputPassword } from 'ant-design-vue';
+import { reactive } from 'vue';
+import { useToast } from 'vue-toastification';
+
+import { loginService } from '@/services/user/authService';
+import { setLocalToken } from '@/utils/authStorage/authLocalStorage';
 import { icons } from '@/assets';
+import { useLoadingStore, useUserStore } from '@/stores';
+import { RouterLink, useRouter } from 'vue-router';
+import route from '@/constants/route';
+
+const toast = useToast();
+const userStorage = useUserStore();
+const loadingStore = useLoadingStore();
+const router = useRouter();
+
+const state = reactive({
+    userEmail: '',
+    password: '',
+});
+
+const handleLogin = () => {
+    loadingStore.show();
+    loginService(state)
+        .then((res) => {
+            if (res.status === 200) {
+                const data = res.data.data;
+                setLocalToken(data);
+                userStorage.setFullUser(data.user, data.accessToken, data.refreshToken);
+                router.push(route.HOMEPAGE);
+            } else {
+                toast.error('Tài khoản hoặc mật khẩu không hợp lệ', { timeout: 3000 });
+            }
+        })
+        .catch((err) => {
+            toast.error('Đã có lỗi xảy ra', { timeout: 3000 });
+        })
+        .finally(() => {
+            loadingStore.hidden();
+        });
+};
+
+const alert = reactive({
+    dismissSecs: 10,
+    dismissCountDown: 0,
+    showDismissibleAlert: false,
+});
+
+const showDismissibleAlert = (message) => {
+    alert.message = message;
+    alert.showDismissibleAlert = true;
+};
 </script>
 
-<style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
-
-:root {
-    --white-color: #e7e9ea;
-    --white-color-hover: #e6e6e6;
-    --black-color: #0f1419;
-    --label-focus-color: #1d9bf0;
-    --bg-color: #242d34;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Roboto', sans-serif;
-    background-color: var(--bg-color);
-    height: 100vh;
-    color: var(--white-color);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
+<style lang="scss" scoped>
 button {
     border: none;
     background: none;
@@ -124,7 +151,6 @@ a {
 }
 
 .close_button:hover {
-    background-color: var(--black-color);
 }
 
 .logo {
@@ -132,18 +158,15 @@ a {
 }
 
 .content {
-    width: 300px;
+    width: 400px;
     text-align: center;
 }
 
 .content h1 {
     margin-block: 24px;
-}
-
-.sign_in:hover{
-    span{
-        color: var(--white-color);
-    }
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
 }
 
 .sign_in_buttons {
@@ -168,7 +191,12 @@ a {
 }
 
 .primary:hover {
-    background-color: var(--white-color-hover);
+    background-color: var(--black-color);
+    color: #fff;
+}
+
+.sign_in_buttons:hover .login_social_button {
+    color: var(--white-color);
 }
 
 .secondary {
@@ -178,7 +206,7 @@ a {
 }
 
 .secondary:hover {
-    background-color: #181919;
+    background-color: var(--white-color);
 }
 
 .sign_in {
@@ -217,21 +245,27 @@ object {
     right: 0;
 }
 
-.email_label {
+.email_label,
+.password_label {
     width: 100%;
     position: relative;
+
+    input {
+        width: 100%;
+        border-radius: 6px;
+        background-color: transparent;
+        border: 1px solid #333639;
+        padding: 15px 10px 15px 10px;
+        outline: none;
+        color: #fff;
+        font-size: 18px;
+        font-family: inherit;
+        height: 50px !important;
+    }
 }
 
-.email_label input {
-    width: 100%;
-    border-radius: 6px;
-    background-color: transparent;
-    border: 1px solid #333639;
-    padding: 25px 10px 5px 10px;
-    outline: none;
-    color: #fff;
-    font-size: 18px;
-    font-family: inherit;
+.password_label {
+    margin-top: 20px;
 }
 
 input::placeholder {
@@ -279,5 +313,10 @@ input:focus + label {
 
 .register a:hover {
     text-decoration: underline;
+}
+
+.custom-input-password {
+    height: 50px;
+    font-size: 1.2em;
 }
 </style>

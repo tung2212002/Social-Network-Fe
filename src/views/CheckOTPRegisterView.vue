@@ -2,6 +2,9 @@
 <template>
     <div class="container">
         <div class="header">
+            <div class="close_button">
+                <i class="ri-close-fill"></i>
+            </div>
             <div class="logo">
                 <i class="ri-twitter-x-fill"></i>
             </div>
@@ -25,42 +28,23 @@
                 <p>or</p>
             </div>
 
+            <!-- <div class="email_group">
+                <input type="text" id="log_in"  v-model="state.userEmail" />
+                <label for="log_in">Telephone, email, username</label>
+            </div> -->
             <div class="name_group">
-                <FormKit type="text" class="email_input" label="Tên" id="first-name" v-model="account.firstName" style="height: 50px" required="" />
-                <FormKit type="text" class="email_input" label="Họ" id="last-name" v-model="account.lastName" style="height: 50px" required />
+                <FormKit type="text" class="email_input" label="Firstname" id="first-name" v-model="state.firstName" style="height: 50px" required="" />
+                <FormKit type="text" class="email_input" label="Lastname" id="last-name" v-model="state.lastName" style="height: 50px" required />
             </div>
             <div class="email_group">
-                <FormKit
-                    type="email"
-                    class="email_input"
-                    label="Email"
-                    id="email-register"
-                    v-model="account.userEmail"
-                    style="height: 50px"
-                    required
-                    autocomplete="email"
-                />
+                <FormKit type="email" class="email_input" label="Email" id="last-name" v-model="state.userEmail" style="height: 50px" required />
             </div>
 
             <div class="password_label">
-                <InputPassword
-                    v-model:value="account.password"
-                    toggleMask
-                    class="custom-input-password"
-                    placeholder="Password"
-                    required
-                    autocomplete="current-password"
-                />
+                <InputPassword v-model:value="state.password" toggleMask class="custom-input-password" placeholder="Password" required />
             </div>
             <div class="password_label">
-                <InputPassword
-                    v-model:value="account.confirmPassword"
-                    toggleMask
-                    class="custom-input-password"
-                    placeholder="Confirm password"
-                    required
-                    autocomplete="new-password"
-                />
+                <InputPassword v-model:value="state.confirmPassword" toggleMask class="custom-input-password" placeholder="Confirm password" required />
             </div>
             <div class="sign_up_buttons">
                 <button type="submit" class="primary sign_up">Đăng ký</button>
@@ -71,19 +55,12 @@
         <div class="register">
             <p>Bạn đã có tài khoản? <RouterLink :to="route.LOGINPAGE">Đăng nhập</RouterLink></p>
         </div>
-        <VerifyOtpRegisterComponent
-            v-if="activeDialog"
-            :active="activeDialog"
-            :account="account"
-            @update:active="activeDialog = $event"
-            @update:account="account = $event"
-        ></VerifyOtpRegisterComponent>
     </div>
 </template>
 
 <script setup>
 import { InputPassword } from 'ant-design-vue';
-import { reactive, ref, watch } from 'vue';
+import { reactive } from 'vue';
 import { useToast } from 'vue-toastification';
 
 import { loginService, registerService } from '@/services/user/authService';
@@ -92,89 +69,66 @@ import { icons } from '@/assets';
 import { useUserStore } from '@/stores';
 import { RouterLink } from 'vue-router';
 import route from '@/constants/route';
-import VerifyOtpRegisterComponent from '@/components/VerifyOtpRegisterComponent.vue';
-import router from '@/router';
 
 const toast = useToast();
 const userStorage = useUserStore();
 
-const account = reactive({
+const state = reactive({
     firstName: '',
     lastName: '',
     userEmail: '',
     password: '',
     confirmPassword: '',
-    otp: '',
 });
-const regex = {
-    password: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!*()]).{8,}$/,
-    email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-    text: /^[a-zA-ZÀ-Ýà-ý]+$/,
-};
-
-const activeDialog = ref(false);
 
 const handleRegister = () => {
-    if (!validate()) {
-        return;
-    }
-
-    registerService(account)
+    registerService(state)
         .then((res) => {
             if (res.status === 200) {
                 toast.success('OTP đã được gửi đến email của bạn', { timeout: 3000 });
-                activeDialog.value = true;
             } else if (res.status === 400) {
-                toast.error('Thông tin không hợp lệ', { timeout: 3000 });
-            } else if (res.status === 409) {
-                toast.error('Tài khoản đã tồn tại', { timeout: 3000 });
+                toast.error('Mật khẩu không hợp lệ', { timeout: 3000 });
             }
         })
         .catch((err) => {
             toast.error('Đã có lỗi xảy ra', { timeout: 3000 });
+            console.log(err.message);
         });
 };
 
-const validate = () => {
-    const validations = [
-        {
-            check: () => !account.firstName.trim() || !regex.text.test(account.firstName.trim()),
-            message: 'Tên không hợp lệ.',
-        },
-        {
-            check: () => !account.lastName.trim() || !regex.text.test(account.lastName.trim()),
-            message: 'Họ không hợp lệ',
-        },
-        {
-            check: () => !account.password.trim(),
-            message: 'Mật khẩu không được để trống.',
-        },
-        {
-            check: () => !account.confirmPassword.trim(),
-            message: 'Xác nhận mật khẩu không được để trống.',
-        },
-        {
-            check: () => account.password !== account.confirmPassword,
-            message: 'Mật khẩu và xác nhận mật khẩu không khớp.',
-        },
-        {
-            check: () => !regex.password.test(account.password),
-            message: 'Mật khẩu yếu hoặc không đúng định dạng',
-        },
-    ];
+const alert = reactive({
+    dismissSecs: 10,
+    dismissCountDown: 0,
+    showDismissibleAlert: false,
+});
 
-    for (const validation of validations) {
-        if (validation.check()) {
-            toast.error(validation.message, { timeout: 3000 });
-            return false;
-        }
-    }
-
-    return true;
+const showDismissibleAlert = (message) => {
+    alert.message = message;
+    alert.showDismissibleAlert = true;
 };
 </script>
 
 <style lang="scss" scoped>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+:root {
+    --white-color: #e7e9ea;
+    --white-color-hover: #e6e6e6;
+    --black-color: #0f1419;
+    --label-focus-color: #1d9bf0;
+    --bg-color: #353f46;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--bg-color);
+    height: 100vh;
+    color: var(--white-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 button {
     border: none;
     background: none;

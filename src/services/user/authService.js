@@ -1,7 +1,10 @@
 import * as request from '../../utils/axios';
 
 export const loginService = async (body) => {
-    const response = await request.api.post('/api/v1/auth/authentication', body);
+    const customHeaders = {
+        fingerprinting: '231231243124',
+    };
+    const response = await request.api.post('/api/v1/auth/authentication', body, { headers: customHeaders });
     return response;
 };
 
@@ -16,22 +19,22 @@ export const refreshTokenService = async (body) => {
 };
 
 export const logoutService = async (body) => {
-    const response = await request.apiAuth.post('/api/v1/auth/logout', body);
+    const response = await request.apiAuth.get('/api/v1/auth/logout', body);
     return response;
 };
 
 export const registerService = async (body) => {
-    const response = await request.apiAttach.post('/api/v1/auth/register', body);
+    const response = await request.api.post('/api/v1/auth/register', body);
     return response;
 };
 
 export const checkOptService = async (body) => {
-    const response = await request.apiAttach.post('/api/v1/auth/register/check-otp', body);
+    const response = await request.api.post('/api/v1/auth/register/check-otp', body);
     return response;
 };
 
 export const verifyTokenService = async () => {
-    const response = await request.apiAuth.post('/api/v1/auth/verify-token');
+    const response = await request.apiAuth.get('/api/v1/auth/verify-token');
     return response;
 };
 

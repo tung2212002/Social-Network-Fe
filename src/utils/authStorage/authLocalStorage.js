@@ -5,14 +5,14 @@ const USER_KEY = 'user';
 
 const getLocalToken = () => getLocalItem(USER_TOKEN_KEY);
 
-const getLocalRefreshToken = () => getLocalToken()?.refresh_token;
+const getLocalRefreshToken = () => getLocalToken()?.refreshToken;
 
-const getLocalAccessToken = () => getLocalToken()?.access_token;
+const getLocalAccessToken = () => getLocalToken()?.accessToken;
 
 const setLocalToken = (token) => setLocalItem(USER_TOKEN_KEY, token);
 
 const updateLocalAccessToken = (token) => {
-    updateLocalItem(USER_TOKEN_KEY, { access_token: token });
+    updateLocalItem(USER_TOKEN_KEY, { accessToken: token });
 };
 
 const updateLocalToken = (token) => setLocalToken(token);

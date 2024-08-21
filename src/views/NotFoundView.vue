@@ -1,15 +1,47 @@
-<template>
-    <div class="about">
-        <h1>This is an not found page</h1>
-    </div>
-</template>
+<script setup>
+import { ref, defineProps, watch, defineEmits } from 'vue';
 
-<style>
-@media (min-width: 1024px) {
-    .about {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-    }
+// Define the props
+const props = defineProps({
+    otp: {
+        type: String,
+        default: '',
+    },
+    email: {
+        type: String,
+        default: '',
+    },
+    active: {
+        type: Boolean,
+        default: false,
+    },
+});
+
+// Create a local reactive state for otp
+const localOtp = ref(props.otp);
+
+// Watch for changes in the prop and update localOtp
+watch(
+    () => props.otp,
+    (newOtp) => {
+        localOtp.value = newOtp;
+    },
+);
+
+// Function to handle resend action
+function handleResend() {
+    localOtp.value = '';
 }
-</style>
+
+const emit = defineEmits();
+
+function handleClick() {
+    emit('custom-event', 'Hello from child!');
+}
+</script>
+
+<template>
+    <template>
+        <div class="text-center pa-4"></div>
+    </template>
+</template>

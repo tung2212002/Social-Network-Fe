@@ -15,6 +15,11 @@ const instance = (config = {}, auth = false) => {
                 }
             }
             requestConfig.timeout = 100000;
+
+            if (requestConfig.customHeaders) {
+                requestConfig.headers = { ...requestConfig.headers, ...requestConfig.customHeaders };
+            }
+
             return requestConfig;
         },
         (error) => {
