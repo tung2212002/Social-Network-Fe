@@ -1,4 +1,4 @@
-import { HomePage, AboutPage, LoginPage, RegisterPage } from '@/views';
+import { HomePage, AboutPage, LoginPage, RegisterPage, ChatPage } from '@/views';
 
 import route from '@/constants/route';
 import { OnlyContentLayout } from '@/layouts';
@@ -30,6 +30,12 @@ export const privateRoutes = [
     {
         path: route.ABOUTPAGE,
         component: AboutPage,
+        isPrivate: true,
+        restricted: false,
+    },
+    {
+        path: route.CHATPAGE,
+        component: ChatPage,
         isPrivate: true,
         restricted: false,
     },

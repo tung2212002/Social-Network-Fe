@@ -3,5 +3,6 @@ export default {
     LOGINPAGE: '/login',
     REGISTERPAGE: '/register',
     ABOUTPAGE: '/about',
+    CHATPAGE: '/chat',
     NOT_FOUND: '*',
 };
