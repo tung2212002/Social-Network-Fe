@@ -1,7 +1,6 @@
 <script setup>
 import { computed } from 'vue';
 import { useLoadingStore } from '@/stores';
-import { icons } from '@/assets';
 
 const loadingStore = useLoadingStore();
 const loadingLocal = computed(() => loadingStore.getLoading);
@@ -17,14 +16,6 @@ const loadingLocal = computed(() => loadingStore.getLoading);
                         </div>
                         <span class="text"> Đợi chút... </span>
                     </div>
-
-                    <!--           
-            <template v-slot:prepend>
-              <div class="pe-4">
-                <v-icon color="primary" size="x-large"></v-icon>
-              </div>
-            </template> -->
-
                     <template v-slot:append>
                         <v-progress-circular color="primary" indeterminate="disable-shrink" size="30" width="2"></v-progress-circular>
                     </template>

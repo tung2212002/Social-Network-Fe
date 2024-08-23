@@ -28,6 +28,37 @@ const instance = (config = {}, auth = false) => {
     );
     request.interceptors.response.use(
         (response) => {
+            if (response?.data?.message === 'Invalid Token' && response?.data?.status === 400 && response?.status === 200) {
+                const refreshToken = getLocalRefreshToken();
+                const url = '/api/v1/auth/refresh-token';
+                if (refreshToken) {
+                    return axios
+                        .post(
+                            url,
+                            {},
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${refreshToken}`,
+                                    'Content-Type': 'application/json',
+                                },
+                            },
+                        )
+                        .then((res) => {
+                            if (res.status === 200) {
+                                const token = res.data.data.access_token;
+                                updateLocalAccessToken(token);
+                                response.config.headers.Authorization = `Bearer ${token}`;
+                                return axios(response.config);
+                            }
+                        })
+                        .catch((error) => {
+                            removeAll();
+                            return Promise.resolve({ status: error.response.status, data: error.response.data });
+                        });
+                } else {
+                    return Promise.resolve({ status: response.status, data: response.data });
+                }
+            }
             return response;
         },
         async (error) => {

@@ -8,52 +8,42 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import SuggestFriendDetailComponent from './SuggestFriendDetailComponent.vue';
 
-const userStore = useUserStore();
-const user = computed(() => userStore.user);
+const props = defineProps({
+    friend: Object,
+});
+
+const friend = props.friend;
 const isMenuOpen = ref(false);
-
-const logout = async () => {
-    try {
-        await logoutService();
-        removeAll();
-        userStore.logout();
-        router.push(route.LOGIN);
-    } catch (error) {
-        console.error('Logout error:', error);
-    }
-};
-
-const router = useRouter();
 </script>
 
 <template>
-        <div class="container">
-            <div class="position-relative">
-                <button class="btn-info">
-                    <v-btn icon>
-                        <v-avatar color="brown" size="large">
-                            <span class="text-h5">{{ user?.avatar || icons.defaultAvatar }}</span>
-                        </v-avatar>
-                    </v-btn>
-                    <v-card-text class="info">
-                        <h3 class="full-name" @mouseenter="isMenuOpen = true" @mouseleave="isMenuOpen = false">{{ user?.lastName }} {{ user?.firstName }}</h3>
-                        <p class="email">{{ user?.userEmail }}</p>
-                    </v-card-text>
-                    <button class="btn-friend">
-                        <span> Kết bạn </span>
-                    </button>
+    <div class="container">
+        <div class="position-relative">
+            <button class="btn-info">
+                <v-btn icon>
+                    <v-avatar size="large">
+                        <v-img alt="Avatar" :src="friend?.user?.avatar || icons.defaultAvatar"> </v-img>
+                    </v-avatar>
+                </v-btn>
+                <v-card-text class="info">
+                    <div class="wrapper" @mouseenter="isMenuOpen = true" @mouseleave="isMenuOpen = false">
+                        <h3 class="full-name">{{ friend?.user?.lastName }} {{ friend?.user?.firstName }}</h3>
+                        <div v-show="isMenuOpen" class="custom-menu">
+                            <SuggestFriendDetailComponent :friend="friend" />
+                        </div>
+                    </div>
+                    <p class="email">{{ friend?.user?.userEmail }}</p>
+                </v-card-text>
+                <button class="btn-friend">
+                    <span> Kết bạn </span>
                 </button>
-                <v-card v-show="isMenuOpen" class="custom-menu">
-                    <SuggestFriendDetailComponent />
-                </v-card>
-            </div>
+            </button>
         </div>
+    </div>
 </template>
 
 <style scoped>
-
-.position-relative{
-    position: relative;
+.position-relative {
 }
 .btn-info {
     width: 100%;
@@ -62,17 +52,26 @@ const router = useRouter();
     align-items: center;
     border-radius: 40px;
     padding: 0 8px;
+    max-width: 70%;
 
     .info {
         padding: 4px 10px;
     }
 }
-
+.wrapper {
+    position: relative;
+}
 .full-name {
     font-size: 15px;
     line-height: 20px;
     font-weight: 700;
     text-align: left;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
     &:hover {
         text-decoration: underline;
     }
@@ -84,12 +83,17 @@ const router = useRouter();
     font-weight: 300;
     color: rgb(153, 152, 152);
     text-align: left;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .custom-menu {
     position: absolute;
-    top: 100%;
-    right: 0;
+    bottom: -50%;
+    right: -100%;
     background-color: white;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -108,7 +112,7 @@ const router = useRouter();
     position: absolute;
     right: 0;
     max-width: 100px;
-    &:hover{
+    &:hover {
         background-color: #7c7c7c;
     }
 }

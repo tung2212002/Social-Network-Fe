@@ -23,7 +23,7 @@ const logout = () => {
 <template>
     <v-container style="height: 300px" fluid>
         <v-row justify="center">
-            <v-menu min-width="200px" rounded>
+            <v-menu min-width="200px" rounded activator="parent" location="bottom">
                 <template v-slot:activator="{ props }">
                     <button v-bind="props" class="btn-info">
                         <v-btn icon>
@@ -33,7 +33,7 @@ const logout = () => {
                         </v-btn>
                         <v-card-text class="info">
                             <h3 class="full-name">{{ user?.lastName }} {{ user?.firstName }}</h3>
-                            <p class="email">@{{ user?.userEmail }}</p>
+                            <p class="email">{{ user?.userEmail }}</p>
                         </v-card-text>
                         <i class="ri-more-fill" style="font-size: 24px"></i>
                     </button>
@@ -79,5 +79,9 @@ const logout = () => {
     margin: 0;
     font-weight: 300;
     color: rgb(153, 152, 152);
+}
+
+.logout {
+    text-transform: none;
 }
 </style>

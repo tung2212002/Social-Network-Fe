@@ -1,34 +1,52 @@
 <script setup>
-import { onMounted, reactive } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import SuggestFriendComponent from './SuggestFriendComponent.vue';
+import { getSuggestFriendService } from '@/services/friend/friendService';
+import CreatePostComponent from './CreatePostComponent.vue';
+import { usePostStore } from '@/stores';
+import CreatePostHeaderComponent from './CreatePostHeaderComponent.vue';
 
-const friend = reactive({
-    friends: [],
-})
+const usePost = usePostStore();
+const loading = computed(() => usePost.getIsLoadingHomePost);
+
+const state = reactive({
+    friends: {
+        users: [],
+        page: 0,
+        size: 5,
+        isLoading: true,
+        hasMore: true,
+    },
+});
 
 onMounted(() => {
-    g()
+    const params = {
+        page: state.friends.page,
+        size: state.friends.size,
+    };
+
+    getSuggestFriendService(params)
         .then((res) => {
             if (res.status === 200) {
-                const newPosts = res.data.data;
-                if (newPosts.length < state.tweets.limit) {
-                    state.tweets.hasMore = false;
+                const newListFriend = res.data.data;
+                if (newListFriend.length < state.friends.size) {
+                    state.friends.hasMore = false;
                 }
-                state.tweets.posts.push(...newPosts);
-                state.tweets.page += 1;
-                console.log(state.tweets);
+                state.friends.users.push(...newListFriend);
+                state.friends.page += 1;
             }
         })
         .catch((err) => {
             console.error(err);
-            state.tweets.isLoading = false;
+        })
+        .finally(() => {
+            state.friends.isLoading = false;
         });
 });
-
 </script>
 
 <template>
-    <div class="lg:w-7/12 w-11/12 border-x border-gray-800 relative scroll-container">
+    <div class="lg:w-7/12 w-11/12 border-x border-gray-800 relative scroll-container" id="content-home-view">
         <div class="bg-black bg-opacity-50 backdrop-blur-md z-10 absolute w-full">
             <div class="border-gray-800 border-b w-full">
                 <div class="w-full text-white text-[22px] font-extrabold p-4">Home</div>
@@ -54,6 +72,7 @@ onMounted(() => {
             <slot />
             <div class="pb-4"></div>
         </div>
+        <CreatePostComponent />
     </div>
 
     <div class="lg:block hidden lg:w-4/12 h-screen border-l border-gray-800 pl-4">
@@ -66,30 +85,14 @@ onMounted(() => {
             />
         </div>
 
-        <div class="w-full mt-4 rounded-lg lg:block hidden bg-[#212327]">
-            <div class="w-full p-4 text-white font-extrabold mb-6 text-[20px]">Có thể bạn biết</div>
+        <div class="w-full mt-4 rounded-lg lg:block hidden border-1">
+            <div class="w-full pt-4 pl-4 text-white font-bold text-[20px]">Có thể bạn biết</div>
 
-            <div class="hover:bg-gray-800 cursor-pointer transition duration-200 ease-in-out">
+            <div v-for="(friend, index) in state.friends.users" :key="index" class="hover:bg-gray-800 cursor-pointer transition duration-200 ease-in-out">
                 <div class="flex p-3 justify-between">
-                    <SuggestFriendComponent />
+                    <SuggestFriendComponent :friend="friend" />
                     <DotsHorizontal fillColor="#5e5c5c" />
                 </div>
-            </div>
-            <div class="hover:bg-gray-800 cursor-pointer transition duration-200 ease-in-out">
-                <div class="flex p-3 justify-between">
-                    <SuggestFriendComponent />
-                    <DotsHorizontal fillColor="#5e5c5c" />
-                </div>
-            </div>
-            <div class="hover:bg-gray-800 cursor-pointer transition duration-200 ease-in-out">
-                <div class="flex p-3 justify-between">
-                    <SuggestFriendComponent />
-                    <DotsHorizontal fillColor="#5e5c5c" />
-                </div>
-            </div>
-
-            <div class="hover:bg-gray-800 rounded-b-xl cursor-pointer transition duration-200 ease-in-out">
-                <div class="text-blue-500 p-4">Show more</div>
             </div>
         </div>
     </div>
@@ -105,6 +108,5 @@ onMounted(() => {
 
 .post {
     margin: 10px 0;
-    border: 1px solid #ccc;
 }
 </style>

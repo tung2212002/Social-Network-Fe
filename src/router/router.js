@@ -18,6 +18,12 @@ export const publicRoutes = [
         restricted: false,
         layout: OnlyContentLayout,
     },
+    {
+        path: route.PROFILEPAGE,
+        component: RegisterPage,
+        isPrivate: false,
+        restricted: false,
+    },
 ];
 
 export const privateRoutes = [

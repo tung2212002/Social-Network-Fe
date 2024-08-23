@@ -1,6 +1,22 @@
 <script setup>
+import { useCreaPostStore } from '@/stores';
 import InfoButtonComponent from './InfoButtonComponent.vue';
 import MenuItem from './MenuItem.vue';
+
+const store = useCreaPostStore();
+
+const handleShow = () => {
+    store.show();
+};
+
+const menuItems = [
+    { iconString: 'Home', route: '/' },
+    { iconString: 'Explore', route: '/explore' },
+    { iconString: 'Notifications', route: '/notifications' },
+    { iconString: 'Messages', route: '/messages' },
+    { iconString: 'Profile', route: '/profile' },
+    { iconString: 'Friends', route: '/friends' },
+];
 </script>
 
 <template>
@@ -8,16 +24,11 @@ import MenuItem from './MenuItem.vue';
         <div class="p-2 px-3 mb-4">
             <Twitter fillColor="#FFFFFF" :size="37" />
         </div>
-
-        <MenuItem iconString="Home" />
-        <MenuItem iconString="Explore" />
-        <MenuItem iconString="Notifications" />
-        <MenuItem iconString="Messages" />
-        <MenuItem iconString="Profile" />
-
-        <button class="mt-8 ml-2 text-white font-extrabold text-[22px] bg-[#1C9CEF] p-3 px-3 rounded-full cursor-pointer button">
-            <span class="lg:block hidden post">Post</span>
-            <span class="block lg:hidden"><Feather /></span>
+        <template v-for="item in menuItems" :key="item.route">
+            <MenuItem :iconString="item.iconString" :route="item.route" />
+        </template>
+        <button class="mt-8 ml-2 text-white font-extrabold text-[22px] bg-[#1C9CEF] p-3 px-3 rounded-full cursor-pointer button" @click="handleShow">
+            <span class="lg:block hidden post">Tạo bài</span>
         </button>
         <div class="info">
             <InfoButtonComponent />
@@ -45,10 +56,12 @@ import MenuItem from './MenuItem.vue';
     border: 0 solid black;
     box-sizing: border-box;
     color: rgba(0, 0, 0, 1);
-    display: inline;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     list-style: none;
     margin: 0px;
-    padding: 0px;
+    padding: 4px 0px;
     position: relative;
     text-align: start;
     white-space: pre-wrap;
@@ -57,15 +70,14 @@ import MenuItem from './MenuItem.vue';
     color: rgb(255, 255, 255);
     line-height: 20px;
     word-wrap: break-word;
-    text-align: center;
     min-width: 0px;
     font-weight: 700;
-    font-size: 15px;
-    align-items: center;
+    font-size: 17px;
 }
 
 .info {
     position: absolute;
     bottom: 0;
+    width: 100%;
 }
 </style>

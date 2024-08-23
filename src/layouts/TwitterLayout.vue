@@ -210,7 +210,7 @@ const textareaInput = (e) => {
                             placeholder="Có thể bạn biết"
                             cols="30"
                             rows="4"
-                            class="w-full bg-black border-0 mt-2 focus:ring-0 text-white text-[19px] font-extrabold min-h-[120px]"
+                            class="w-full bg-black border-0 mt-2 focus:ring-0 text-white text-[19px] font-bold min-h-[120px]"
                         ></textarea>
                     </div>
                     <div class="w-full">

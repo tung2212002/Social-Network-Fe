@@ -7,8 +7,10 @@ import { removeAll } from '@/utils/authStorage/authLocalStorage';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-const userStore = useUserStore();
-const user = computed(() => userStore.user);
+const props = defineProps({
+    friend: Object,
+});
+const user = props.friend;
 const isMenuOpen = ref(false);
 
 const router = useRouter();
@@ -18,14 +20,15 @@ const router = useRouter();
     <div class="container">
         <div class="position-relative">
             <button class="btn-info">
-                <v-btn icon>
-                    <v-avatar color="brown" size="large">
-                        <span class="text-h5">{{ user?.avatar || icons.defaultAvatar }}</span>
-                    </v-avatar>
-                </v-btn>
                 <v-card-text class="info">
-                    <h3 class="full-name" @mouseenter="isMenuOpen = true" @mouseleave="isMenuOpen = false">{{ user?.lastName }} {{ user?.firstName }}</h3>
-                    <p class="email">{{ user?.userEmail }}</p>
+                    <v-avatar size="80px">
+                        <v-img alt="Avatar" :src="friend?.user?.avatar || icons.defaultAvatar"> </v-img>
+                    </v-avatar>
+                    <RouterLink :to="`/profile/${friend.user?.userId}`" class="full-name" @mouseenter="isMenuOpen = true" @mouseleave="isMenuOpen = false"
+                        >{{ friend.user?.lastName }} {{ friend.user?.firstName }}</RouterLink
+                    >
+                    <p class="email">{{ friend.user?.userEmail }}</p>
+                    <p v-show="friend.mutualFriendsQuantity > 0" class="email">Có {{ user.mutualFriendsQuantity }} bạn chung</p>
                 </v-card-text>
                 <button class="btn-friend">
                     <span> Kết bạn </span>
@@ -39,12 +42,15 @@ const router = useRouter();
 .container {
     background-color: black;
 }
-
+.info {
+    display: flex;
+    flex-direction: column;
+}
 .position-relative {
     position: relative;
 }
 .btn-info {
-    width: 100%;
+    width: 300px;
     color: azure;
     display: flex;
     align-items: center;
@@ -63,6 +69,7 @@ const router = useRouter();
     text-align: left;
     &:hover {
         text-decoration: underline;
+        background-color: black;
     }
 }
 
@@ -91,11 +98,14 @@ const router = useRouter();
     background-color: #969696;
     color: black;
     width: 100%;
-    padding: 4px 16px;
+    padding: 4px 20px;
     border-radius: 16px;
     position: absolute;
     right: 0;
     max-width: 100px;
+    position: absolute;
+    top: 0;
+    right: 0;
     &:hover {
         background-color: #7c7c7c;
     }

@@ -1,6 +1,6 @@
 import * as request from '../../utils/axios';
 
-export const createPostService = async (body) => {
-    const response = await request.apiAuth.post('/api/v1/posts', body);
+export const getSuggestFriendService = async (params) => {
+    const response = await request.apiAuth.get('/api/v1/friends/suggest', { params });
     return response;
 };
