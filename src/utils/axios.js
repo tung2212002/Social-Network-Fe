@@ -9,7 +9,9 @@ const instance = (config = {}, auth = false) => {
     request.interceptors.request.use(
         async (requestConfig) => {
             if (auth) {
-                const token = getLocalAccessToken();
+                // const token = getLocalAccessToken();
+                let token =
+                    'eyJhbGciOiJIUzI1NiJ9.eyJmaW5nZXJwcmludGluZyI6IjIzMTIzMTI0MzEyNCIsInN1YiI6IjlAZ21haWwuY29tIiwiaWF0IjoxNzI0NDgzMjcwLCJleHAiOjE3MjQ1Njk2NzB9.aiQ67oHdy4VVMBvAOqs0lHYs774rIlx2CmahhMLauhU';
                 if (token) {
                     requestConfig.headers.Authorization = `Bearer ${token}`;
                 }

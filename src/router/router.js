@@ -36,7 +36,7 @@ export const privateRoutes = [
     {
         path: route.CHATPAGE,
         component: ChatPage,
-        isPrivate: true,
+        isPrivate: false,
         restricted: false,
     },
 ];

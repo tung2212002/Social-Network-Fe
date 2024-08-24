@@ -26,11 +26,13 @@
             </div>
 
             <div class="email_label">
-                <FormKit type="text" class="email_input" label="Username" id="log_in" v-model="state.userEmail" style="height: 50px" />
+                <FormKit type="text" class="email_input" label="Username" id="log_in" v-model="state.userEmail"
+                    style="height: 50px" />
             </div>
 
             <div class="password_label">
-                <InputPassword v-model:value="state.password" toggleMask class="custom-input-password" placeholder="Password" />
+                <InputPassword v-model:value="state.password" toggleMask class="custom-input-password"
+                    placeholder="Password" />
             </div>
 
             <div class="sign_up_buttons">
@@ -40,7 +42,8 @@
         </div>
 
         <div class="register">
-            <p>Bạn chưa có tài khoản? <RouterLink :to="route.REGISTERPAGE">Đăng ký</RouterLink></p>
+            <p>Bạn chưa có tài khoản? <RouterLink :to="route.REGISTERPAGE">Đăng ký</RouterLink>
+            </p>
         </div>
 
         <!-- <Toast /> -->
@@ -150,8 +153,7 @@ a {
     border-radius: 50%;
 }
 
-.close_button:hover {
-}
+.close_button:hover {}
 
 .logo {
     font-size: 30px;
@@ -272,7 +274,7 @@ input::placeholder {
     opacity: 0;
 }
 
-input + label {
+input+label {
     position: absolute;
     top: 15px;
     left: 10px;
@@ -286,11 +288,11 @@ input:focus {
     outline: 1px solid var(--label-focus-color);
 }
 
-input:focus + label {
+input:focus+label {
     color: var(--label-focus-color);
 }
 
-input:focus + label {
+input:focus+label {
     top: 6px;
     left: 10px;
     font-size: 12px;
