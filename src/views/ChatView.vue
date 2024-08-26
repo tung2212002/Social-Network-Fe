@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, inject, computed, nextTick, onMounted } from 'vue';
 import { groupService } from '@/services/chat/groupService';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
@@ -10,6 +10,7 @@ const toast = useToast();
 const chats = ref([]);
 const isLoading = ref(true);
 
+// const wsClient = inject('wsClient'); // Kết nối với WebSocket
 const selectedChat = ref(null);
 const searchQuery = ref('');
 const showCreateGroupDialog = ref(false);
@@ -17,7 +18,16 @@ const newGroupName = ref('');
 const newGroupType = ref('GROUP_PUBLIC');
 const searchMember = ref('');
 const allUsers = ref([]);
+// const currentUserId = 9; // ID người dùng hiện tại
 const selectedMembers = ref([]);
+
+// const subscribeToWebSocket = () => {
+//   if (wsClient.value && wsClient.value.active) {
+//     wsClient.value.subscribe(`/channel/app/${currentUserId}`, (message) => {
+//       fetchGroups()
+//     });
+//   }
+// };
 
 const fetchGroups = async () => {
   try {
@@ -33,7 +43,8 @@ const fetchGroups = async () => {
           groupBackground: data.groupBackground || "https://cdn-icons-png.flaticon.com/512/69/69589.png",
           lastActive: data.lastActive,
           messageUnreadCount: data.messageUnreadCount,
-          online: data.online
+          online: data.online,
+          inGroup: data.inGroup
         }));
       } else {
         console.error("Expected an array but got", datas);
@@ -120,6 +131,12 @@ const toggleMember = (userId) => {
     selectedMembers.value.splice(index, 1);
   }
 };
+
+// onMounted(() => {
+//   nextTick(() => {
+//     subscribeToWebSocket();
+//   });
+// })
 </script>
 
 <template>

@@ -11,7 +11,7 @@ const instance = (config = {}, auth = false) => {
             if (auth) {
                 // const token = getLocalAccessToken();
                 let token =
-                    'eyJhbGciOiJIUzI1NiJ9.eyJmaW5nZXJwcmludGluZyI6IjIzMTIzMTI0MzEyNCIsInN1YiI6IjlAZ21haWwuY29tIiwiaWF0IjoxNzI0NDgzMjcwLCJleHAiOjE3MjQ1Njk2NzB9.aiQ67oHdy4VVMBvAOqs0lHYs774rIlx2CmahhMLauhU';
+                    'eyJhbGciOiJIUzI1NiJ9.eyJmaW5nZXJwcmludGluZyI6IjIzMTIzMTI0MzEyNCIsInN1YiI6IjlAZ21haWwuY29tIiwiaWF0IjoxNzI0NjU5MDQ5LCJleHAiOjE3MjQ3NDU0NDl9.plCxUIiooUbRzvF3Lp_zpnE3HN64mX3OCvi2uHyLihs';
                 if (token) {
                     requestConfig.headers.Authorization = `Bearer ${token}`;
                 }

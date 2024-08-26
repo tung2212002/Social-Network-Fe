@@ -15,7 +15,7 @@ import { LoadingComponent } from './components';
 const route = useRoute();
 const layout = computed(() => route.meta.layout || DefaultLayout);
 
-const token = ref('eyJhbGciOiJIUzI1NiJ9.eyJmaW5nZXJwcmludGluZyI6IjIzMTIzMTI0MzEyNCIsInN1YiI6IjlAZ21haWwuY29tIiwiaWF0IjoxNzI0NDgzMjcwLCJleHAiOjE3MjQ1Njk2NzB9.aiQ67oHdy4VVMBvAOqs0lHYs774rIlx2CmahhMLauhU');
+const token = ref('eyJhbGciOiJIUzI1NiJ9.eyJmaW5nZXJwcmludGluZyI6IjIzMTIzMTI0MzEyNCIsInN1YiI6IjlAZ21haWwuY29tIiwiaWF0IjoxNzI0NjU5MDQ5LCJleHAiOjE3MjQ3NDU0NDl9.plCxUIiooUbRzvF3Lp_zpnE3HN64mX3OCvi2uHyLihs');
 
 const wsConfig = ref({
     url: "ws://localhost:8080/ws",

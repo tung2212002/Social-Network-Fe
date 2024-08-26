@@ -1,7 +1,7 @@
 <template>
-  <div class="chat-item" @click="$emit('click')">
+  <div :class="['chat-item', { 'selected': isSelected }]" @click="handleClick">
     <div class="avatar-container">
-      <img :src="avatarSrc" alt="Group Avatar" class="avatar">
+      <img :src="avatarSrc" :alt="`${groupName} Avatar`" class="avatar">
       <span v-if="online" class="online-indicator"></span>
     </div>
     <div class="chat-info">
@@ -17,67 +17,66 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { computed } from 'vue';
 
-
-export default {
-  name: 'SidebarChatItem',
-  props: {
-    groupId: {
-      type: String,
-      required: true
-    },
-    groupName: {
-      type: String,
-      required: true
-    },
-    lastMessage: {
-      type: String,
-      default: null
-    },
-    groupBackground: {
-      type: String,
-      default: null
-    },
-    lastActive: {
-      type: String,
-      default: null
-    },
-    messageUnreadCount: {
-      type: Number,
-      default: null
-    },
-    online: {
-      type: Boolean,
-      default: false
-    }
+const props = defineProps({
+  groupId: {
+    type: String,
+    required: true
   },
-  setup(props) {
-    const avatarSrc = computed(() => props.groupBackground || '/path/to/default-avatar.jpg');
-
-    const isUnread = computed(() => props.messageUnreadCount !== null && props.messageUnreadCount > 0);
-
-    const statusText = computed(() => {
-      if (props.online) return 'Online';
-      if (!props.lastActive) return 'Offline';
-      
-      const lastActiveDate = new Date(props.lastActive);
-      const now = new Date();
-      const diffInHours = Math.floor((now - lastActiveDate) / (1000 * 60 * 60));
-      
-      if (diffInHours < 1) return 'Active recently';
-      if (diffInHours < 24) return `Active ${diffInHours} hours ago`;
-      return `Active ${Math.floor(diffInHours / 24)} days ago`;
-    });
-
-    return {
-      avatarSrc,
-      isUnread,
-      statusText
-    };
+  groupName: {
+    type: String,
+    required: true
+  },
+  lastMessage: {
+    type: String,
+    default: null
+  },
+  groupBackground: {
+    type: String,
+    default: null
+  },
+  lastActive: {
+    type: String,
+    default: null
+  },
+  messageUnreadCount: {
+    type: Number,
+    default: 0
+  },
+  online: {
+    type: Boolean,
+    default: false
+  },
+  isSelected: {
+    type: Boolean,
+    default: false
   }
-}
+});
+
+const emit = defineEmits(['select']);
+
+const avatarSrc = computed(() => props.groupBackground || '/path/to/default-avatar.jpg');
+
+const isUnread = computed(() => props.messageUnreadCount > 0);
+
+const statusText = computed(() => {
+  if (props.online) return 'Online';
+  if (!props.lastActive) return 'Offline';
+
+  const lastActiveDate = new Date(props.lastActive);
+  const now = new Date();
+  const diffInHours = Math.floor((now - lastActiveDate) / (1000 * 60 * 60));
+
+  if (diffInHours < 1) return 'Active recently';
+  if (diffInHours < 24) return `Active ${diffInHours} hours ago`;
+  return `Active ${Math.floor(diffInHours / 24)} days ago`;
+});
+
+const handleClick = () => {
+  emit('select', props.groupId);
+};
 </script>
 
 <style scoped>
@@ -87,11 +86,14 @@ export default {
   padding: 10px;
   cursor: pointer;
   transition: background-color 0.3s;
-  position: relative;
 }
 
 .chat-item:hover {
   background-color: #f0f0f0;
+}
+
+.chat-item.selected {
+  background-color: #ea1313;
 }
 
 .avatar-container {
@@ -99,11 +101,13 @@ export default {
   margin-right: 10px;
 }
 
+
 .avatar {
   width: 50px;
   height: 50px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center;
 }
 
 .online-indicator {
@@ -125,7 +129,6 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 5px;
 }
 
 h3 {
@@ -133,14 +136,9 @@ h3 {
   font-size: 16px;
 }
 
-.unread {
-  font-weight: bold;
-  color: #007bff;
-}
-
 .status-indicator {
   font-size: 12px;
-  color: #666;
+  color: #888;
 }
 
 .status-indicator.online {
@@ -148,7 +146,7 @@ h3 {
 }
 
 .last-message {
-  margin: 0;
+  margin: 5px 0 0;
   font-size: 14px;
   color: #666;
   white-space: nowrap;
@@ -156,18 +154,19 @@ h3 {
   text-overflow: ellipsis;
 }
 
-.unread-indicator {
-  position: absolute;
-  top: 60%;
-  right: 10px;
-  transform: translateY(-50%);
-  background-color: #ff4b4b;
-  color: white;
-  font-size: 12px;
+.unread {
   font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 10px;
-  min-width: 20px;
-  text-align: center;
+}
+
+.unread-indicator {
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
 }
 </style>
