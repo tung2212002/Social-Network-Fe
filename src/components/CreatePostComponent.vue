@@ -5,9 +5,7 @@ import Earth from 'vue-material-design-icons/Earth.vue';
 import ImageOutline from 'vue-material-design-icons/ImageOutline.vue';
 import FileGifBox from 'vue-material-design-icons/FileGifBox.vue';
 import Emoticon from 'vue-material-design-icons/Emoticon.vue';
-import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
-import AccountCheck from 'vue-material-design-icons/AccountCheck.vue';
-import LockOpenOutline from 'vue-material-design-icons/LockOpenOutline.vue';
+import TagPlusOutline from 'vue-material-design-icons/TagPlusOutline.vue';
 
 import { computed, reactive, ref, watch } from 'vue';
 import { useCreaPostStore, usePostStore, useUserStore } from '@/stores';
@@ -15,6 +13,8 @@ import { FormKit } from '@formkit/vue';
 import { createPostService, upImagePostService } from '@/services/post/postService';
 import { useToast } from 'vue-toastification';
 import { icons } from '@/assets';
+import TagUserPostComponent from './TagUserPostComponent.vue';
+import TagUserPostComponent2 from './TagUserPostComponent2.vue';
 
 const toast = useToast();
 const fileUpload = ref(null);
@@ -56,6 +56,8 @@ const post = reactive({
     imageIds: [],
     publicIds: [],
 });
+
+const tagUser = ref([]);
 
 const handleUploadImagePost = () => {
     const body = new FormData();
@@ -100,10 +102,17 @@ const resetPost = () => {
     post.imageIds = [];
     post.publicIds = [];
     currentImage.value = [];
+    tagUser.value = [];
 };
 
 const addPost = () => {
-    createPostService(post)
+    const body = {
+        content: post.content,
+        status: post.status,
+        tagUserIds: tagUser.value.map((item) => item.userId),
+        publicIds: post.publicIds,
+    };
+    createPostService(body)
         .then((res) => {
             if (res.status === 201) {
                 postStore.addPost(res.data.data);
@@ -132,6 +141,13 @@ const getFile = (e) => {
     } else {
         fileUpload.value = file;
         handleUploadImagePost();
+    }
+};
+
+const handleClickTagUser = () => {
+    const tagUser = document.getElementById('tag-user-post');
+    if (tagUser) {
+        tagUser.focus();
     }
 };
 
@@ -180,6 +196,7 @@ const removeImage = (publicId) => {
                         </div>
                     </div>
                 </v-card-text>
+                <TagUserPostComponent2 :selectedUsers="tagUser" @update:selectedUsers="tagUser = $event" />
             </div>
             <div class="w-full flex justify-center">
                 <div class="w-[calc(100%-60px)]">
@@ -219,10 +236,6 @@ const removeImage = (publicId) => {
                         </div>
                     </div>
 
-                    <div class="w-full">
-                        <video controls v-if="uploadType === 'mp4'" :src="showUpload" class="rounded-xl overflow-auto" />
-                        <img v-else :src="showUpload" class="rounded-xl min-w-full" />
-                    </div>
                     <div class="flex py-2 items-center text-[#1C9CEF] font-normal">
                         <i :class="status.find((item) => item.state === post.status).icon" class="pr-2"> </i>
                         {{ status.find((item) => item.state === post.status).description }}
@@ -236,8 +249,8 @@ const removeImage = (publicId) => {
                                 </label>
                                 <input type="file" id="fileUpload" class="hidden" @change="getFile" />
                             </div>
-                            <div class="hover:bg-gray-800 inline-block p-2 rounded-full cursor-pointer mr-1 w-10 h-10">
-                                <FileGifBox fillColor="#1C9CEF" :size="25" />
+                            <div class="hover:bg-gray-800 inline-block p-2 rounded-full cursor-pointer mr-1 w-10 h-10" @click="handleClickTagUser">
+                                <TagPlusOutline fillColor="#1C9CEF" :size="25" />
                             </div>
                             <div class="hover:bg-gray-800 inline-block p-2 rounded-full cursor-pointer mr-1 w-10 h-10">
                                 <Emoticon fillColor="#1C9CEF" :size="25" />

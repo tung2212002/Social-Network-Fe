@@ -2,6 +2,7 @@
 import { useCreaPostStore } from '@/stores';
 import InfoButtonComponent from './InfoButtonComponent.vue';
 import MenuItem from './MenuItem.vue';
+import route from '@/constants/route';
 
 const store = useCreaPostStore();
 
@@ -15,7 +16,7 @@ const menuItems = [
     { iconString: 'Notifications', route: '/notifications' },
     { iconString: 'Messages', route: '/messages' },
     { iconString: 'Profile', route: '/profile' },
-    { iconString: 'Friends', route: '/friends' },
+    { iconString: 'Friends', route: route.FRIENDSHIPPAGE },
 ];
 </script>
 

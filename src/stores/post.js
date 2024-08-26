@@ -58,5 +58,34 @@ export const usePostStore = defineStore('post', {
             this.homePost = this.homePost.filter((post) => post.user.userId !== userId);
             this.minePost = this.minePost.filter((post) => post.user.userId !== userId);
         },
+        updatePost(post) {
+            console.log('1');
+            const postId = post.postId;
+            let indexHome = this.homePost.findIndex((item) => item.postId === postId);
+            let indexMine = this.minePost.findIndex((item) => item.postId === postId);
+
+            // if (indexHome !== -1) {
+            //     // this.homePost.splice(indexHome, 1);
+            //     this.homePost.splice(indexHome, 0, post);
+            // }
+            this.homePost = this.homePost.filter((post) => post.postId !== postId);
+            if (indexHome !== -1) {
+                // this.homePost.splice(indexHome, 1);
+                this.homePost.splice(indexHome, 0, post);
+            }
+            this.minePost = this.minePost.filter((post) => post.postId !== postId);
+            // if (indexMine !== -1) {
+            //     // this.minePost.splice(indexMine, 1);
+            //     this.homePost.splice(indexMine, 0, post);
+            // }
+            // this.homePost = this.homePost.filter((post, index) => {
+            //     indexHome = index;
+            //     post.postId !== postId;
+            // });
+            // this.homePost.this.minePost = this.minePost.filter((post, index) => {
+            //     indexMine = index;
+            //     post.postId !== postId;
+            // });
+        },
     },
 });

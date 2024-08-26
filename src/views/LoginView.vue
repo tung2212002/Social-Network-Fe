@@ -1,6 +1,6 @@
 <!-- src/components/Login.vue -->
 <template>
-    <div class="container">
+    <div class="container container-login">
         <div class="header">
             <div class="logo">
                 <i class="ri-twitter-x-fill"></i>
@@ -26,11 +26,11 @@
             </div>
 
             <div class="email_label">
-                <FormKit type="text" class="email_input" label="Username" id="log_in" v-model="state.userEmail" style="height: 50px" />
+                <FormKit type="text" class="email_input" label="Tài khoản" id="log_in" v-model="state.userEmail" style="height: 50px" />
             </div>
 
             <div class="password_label">
-                <InputPassword v-model:value="state.password" toggleMask class="custom-input-password" placeholder="Password" />
+                <InputPassword v-model:value="state.password" toggleMask class="custom-input-password" placeholder="Mật khẩu" />
             </div>
 
             <div class="sign_up_buttons">
@@ -83,7 +83,7 @@ const handleLogin = () => {
             }
         })
         .catch((err) => {
-            toast.error('Đã có lỗi xảy ra', { timeout: 3000 });
+            toast.error('Đã có lỗi xảy ra......', { timeout: 3000 });
         })
         .finally(() => {
             loadingStore.hidden();
@@ -101,6 +101,22 @@ const showDismissibleAlert = (message) => {
     alert.showDismissibleAlert = true;
 };
 </script>
+
+<style>
+.container-login {
+    input {
+        color-scheme: light !important;
+    }
+}
+
+.email_label {
+    max-width: unset !important;
+
+    .group {
+        max-width: unset !important;
+    }
+}
+</style>
 
 <style lang="scss" scoped>
 button {

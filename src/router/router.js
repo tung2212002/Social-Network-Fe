@@ -2,6 +2,7 @@ import { HomePage, AboutPage, LoginPage, RegisterPage } from '@/views';
 
 import route from '@/constants/route';
 import { OnlyContentLayout } from '@/layouts';
+import FriendShipView from '@/views/FriendShipView.vue';
 
 export const publicRoutes = [
     {
@@ -36,6 +37,12 @@ export const privateRoutes = [
     {
         path: route.ABOUTPAGE,
         component: AboutPage,
+        isPrivate: true,
+        restricted: false,
+    },
+    {
+        path: route.FRIENDSHIPPAGE,
+        component: FriendShipView,
         isPrivate: true,
         restricted: false,
     },

@@ -1,6 +1,6 @@
 <!-- src/components/Login.vue -->
 <template>
-    <div class="container">
+    <div class="container container-register">
         <div class="header">
             <div class="logo">
                 <i class="ri-twitter-x-fill"></i>
@@ -131,7 +131,7 @@ const handleRegister = () => {
             }
         })
         .catch((err) => {
-            toast.error('Đã có lỗi xảy ra', { timeout: 3000 });
+            toast.error('Đã có lỗi xảy ra....', { timeout: 3000 });
         });
 };
 
@@ -173,8 +173,30 @@ const validate = () => {
     return true;
 };
 </script>
+<style>
+.container-register {
+    input {
+        color-scheme: light !important;
+    }
+}
 
+#email-register {
+    color-scheme: light !important;
+}
+
+.email_group {
+    max-width: unset !important;
+
+    .group {
+        max-width: unset !important;
+    }
+}
+</style>
 <style lang="scss" scoped>
+#email-register {
+    color-scheme: light !important;
+}
+
 button {
     border: none;
     background: none;
@@ -334,11 +356,16 @@ object {
         border: 1px solid #333639;
         padding: 15px 10px 15px 10px;
         outline: none;
-        color: #fff;
+        color: #fff !important;
         font-size: 18px;
         font-family: inherit;
         height: 50px !important;
+        color-scheme: light;
     }
+}
+
+.email_group > div {
+    width: 100% !important;
 }
 
 .password_label {

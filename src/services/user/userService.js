@@ -29,3 +29,8 @@ export const setStatePrivacyService = async (body) => {
     const response = await request.apiAuth.put('/api/v1/profiles/privacy', body);
     return response;
 };
+
+export const searchUserService = async (params) => {
+    const response = await request.apiAuth.get('/api/search/user', { params });
+    return response;
+};

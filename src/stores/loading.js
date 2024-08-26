@@ -4,10 +4,12 @@ export const useLoadingStore = defineStore('loading', {
     state: () => ({
         loading: false,
         dialog: false,
+        modalTag: false,
     }),
     getters: {
         getLoading: (state) => state.loading,
         getDialog: (state) => state.dialog,
+        getModalTag: (state) => state.modalTag,
     },
     actions: {
         show() {
@@ -21,6 +23,12 @@ export const useLoadingStore = defineStore('loading', {
         },
         hiddenDialog() {
             this.dialog = false;
+        },
+        showModalTag() {
+            this.modalTag = true;
+        },
+        hiddenModalTag() {
+            this.modalTag = false;
         },
     },
 });

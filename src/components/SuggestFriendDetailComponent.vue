@@ -1,19 +1,88 @@
 <script setup>
 import { icons } from '@/assets';
-import route from '@/constants/route';
-import { logoutService } from '@/services/user/authService';
-import { useUserStore } from '@/stores';
-import { removeAll } from '@/utils/authStorage/authLocalStorage';
+import { deleteFriendService, requestFriendService } from '@/services/friend/friendService';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const props = defineProps({
     friend: Object,
 });
-const user = props.friend;
+// const user = props.friend;
+const user = ref(props.friend);
 const isMenuOpen = ref(false);
 
+const status = [
+    {
+        value: 'REQUESTED',
+        label: 'Đã gửi yêu cầu',
+    },
+    {
+        value: 'PENDING',
+        label: 'Chờ xác nhận',
+    },
+    {
+        value: 'CLOSE_FRIEND',
+        label: 'Bạn bè',
+    },
+    {
+        value: 'SIBLING',
+        label: 'Anh chị em',
+    },
+    {
+        value: 'PARENT',
+        label: 'Bố mẹ',
+    },
+    {
+        value: 'OTHER',
+        label: 'Khác',
+    },
+    {
+        value: 'BLOCK',
+        label: 'Chặn',
+    },
+    {
+        value: null,
+        label: '',
+    },
+];
+
+console.log(user.value);
+
 const router = useRouter();
+
+const handleRequestFriend = () => {
+    const body = {
+        userReceiveId: user.value.user.userId,
+        status: 'CLOSE_FRIEND',
+    };
+
+    requestFriendService(body)
+        .then((res) => {
+            if (res.status === 200) {
+                user.value.status = 'PENDING';
+            }
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+};
+
+const unRequestFriend = () => {
+    const body = {
+        userId: user.value.user.userId,
+        status: 'CLOSE_FRIEND',
+    };
+
+    deleteFriendService(body)
+        .then((res) => {
+            if (res.status === 200) {
+                user.value.status = null;
+            }
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+};
 </script>
 
 <template>
@@ -30,8 +99,11 @@ const router = useRouter();
                     <p class="email">{{ friend.user?.userEmail }}</p>
                     <p v-show="friend.mutualFriendsQuantity > 0" class="email">Có {{ user.mutualFriendsQuantity }} bạn chung</p>
                 </v-card-text>
-                <button class="btn-friend">
-                    <span> Kết bạn </span>
+                <button class="btn-friend" @click="unRequestFriend" v-if="friend.status === 'PENDING'">
+                    <span v-if="friend.status === 'PENDING'">Hủy yêu cầu</span>
+                </button>
+                <button class="btn-friend" @click="handleRequestFriend" v-if="friend.status === null">
+                    <span>Kết bạn</span>
                 </button>
             </button>
         </div>

@@ -91,7 +91,7 @@ const handleRegister = () => {
             }
         })
         .catch((err) => {
-            toast.error('Đã có lỗi xảy ra', { timeout: 3000 });
+            toast.error('Đã có lỗi xảy ra...', { timeout: 3000 });
             console.log(err.message);
         });
 };

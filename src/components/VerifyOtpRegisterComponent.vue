@@ -63,7 +63,7 @@ const resendCode = () => {
             }
         })
         .catch((err) => {
-            toast.error('Đã có lỗi xảy ra', { timeout: 3000 });
+            toast.error('Đã có lỗi xảy ra.', { timeout: 3000 });
         });
 };
 
@@ -81,12 +81,15 @@ const verifyOtp = () => {
                 useLoading.hidden();
             } else if (res.status === 400) {
                 toast.error('OTP không đúng hoặc đã hết hạn', { timeout: 3000 });
+                useLoading.hidden();
             } else if (res.status === 429) {
                 toast.error('Quá số lần nhập OTP', { timeout: 3000 });
+                useLoading.hidden();
             }
         })
         .catch((error) => {
-            toast.err('Đã có lỗi xảy ra', { timeout: 3000 });
+            toast.err('Đã có lỗi xảy ra..', { timeout: 3000 });
+            useLoading.hidden();
         });
 };
 </script>

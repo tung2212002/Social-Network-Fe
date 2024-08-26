@@ -5,6 +5,8 @@ import { getSuggestFriendService } from '@/services/friend/friendService';
 import CreatePostComponent from './CreatePostComponent.vue';
 import { usePostStore } from '@/stores';
 import CreatePostHeaderComponent from './CreatePostHeaderComponent.vue';
+import TagUserPostComponent from './TagUserPostComponent.vue';
+import TagUserPostComponent2 from './TagUserPostComponent2.vue';
 
 const usePost = usePostStore();
 const loading = computed(() => usePost.getIsLoadingHomePost);
@@ -47,7 +49,7 @@ onMounted(() => {
 
 <template>
     <div class="lg:w-7/12 w-11/12 border-x border-gray-800 relative scroll-container" id="content-home-view">
-        <div class="bg-black bg-opacity-50 backdrop-blur-md z-10 absolute w-full">
+        <div class="bg-black bg-opacity-50 backdrop-blur-md z-0 absolute w-full">
             <div class="border-gray-800 border-b w-full">
                 <div class="w-full text-white text-[22px] font-extrabold p-4">Home</div>
                 <div class="flex">
@@ -72,7 +74,6 @@ onMounted(() => {
             <slot />
             <div class="pb-4"></div>
         </div>
-        <CreatePostComponent />
     </div>
 
     <div class="lg:block hidden lg:w-4/12 h-screen border-l border-gray-800 pl-4">

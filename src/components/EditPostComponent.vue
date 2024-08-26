@@ -12,23 +12,27 @@ import LockOpenOutline from 'vue-material-design-icons/LockOpenOutline.vue';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useCreaPostStore, usePostStore, useUserStore } from '@/stores';
 import { FormKit } from '@formkit/vue';
-import { createPostService, getPostByIdService, upImagePostService } from '@/services/post/postService';
+import { createPostService, editPostService, getPostByIdService, upImagePostService } from '@/services/post/postService';
 import { useToast } from 'vue-toastification';
 import { icons } from '@/assets';
+import TagUserPostComponent2 from './TagUserPostComponent2.vue';
 
-const props = defineProps({
-    postId: Number,
-});
 const toast = useToast();
 const fileUpload = ref(null);
 const store = useCreaPostStore();
-const isOpen = computed(() => store.getOpen);
 const userStorage = useUserStore();
 const user = computed(() => userStorage.user);
 const postStore = usePostStore();
 const isLoadingPost = ref(true);
 
+const postId = computed(() => store.getEditPostId);
+console.log('postId', postId.value);
+const isOpen = computed(() => store.getOpenUpdate);
+console.log('isOpen', isOpen.value);
+console.log('....', store.getEditPostId);
 const currentImage = ref([]);
+const tagUser = ref([]);
+const openComment = ref(false);
 
 const status = [
     {
@@ -60,6 +64,7 @@ const post = reactive({
     tagUserIds: [],
     imageIds: [],
     publicIds: [],
+    postId: null,
 });
 
 const handleUploadImagePost = () => {
@@ -81,15 +86,8 @@ const handleUploadImagePost = () => {
 };
 
 const handleHide = () => {
-    console.log('hide', post.content);
-
-    console.log('hide', !post.content && post.publicIds.length === 0);
-    store.hidden();
+    store.hiddenUpdate();
 };
-
-watch(isOpen, (value) => {
-    console.log(value);
-});
 
 const canEdit = computed(() => post.content.trim() || post.publicIds.length > 0);
 
@@ -100,22 +98,31 @@ const resetPost = () => {
     post.imageIds = [];
     post.publicIds = [];
     currentImage.value = [];
+    tagUser.value = [];
 };
 
 onMounted(() => {
-    getPostByIdService(props.postId)
+    if (!isOpen.value) return;
+    getPostByIdService(postId.value)
         .then((res) => {
             if (res.status === 200) {
                 const data = res.data.data;
+                post.postId = data.postId;
                 post.content = data.content;
                 post.status = data.status;
-                post.tagUserIds = data.tagUserIds;
-                post.imageIds = data.imageIds;
-                post.publicIds = data.imageIds;
-                currentImage.value = data.imageIds.map((item) => ({
-                    publicId: item,
-                    imageLocal: item,
+                post.tagUserIds = data.tagUsers.map((item) => item.userId);
+                post.imageIds = data.imagePosts.map((item) => item.imageId);
+                post.publicIds = [];
+                currentImage.value = data.imagePosts.map((item) => ({
+                    publicId: 0,
+                    imageLocal: item.imageUrl,
                 }));
+                tagUser.value = data.tagUsers.map((item) => ({
+                    name: `${item.lastName} ${item.firstName}`,
+                    userId: item.userId,
+                    avatar: item.avatar || icons.defaultAvatar,
+                }));
+                console.log('tag for child', tagUser.value);
                 isLoadingPost.value = false;
             } else {
                 toast.error('Có lỗi xảy ra', { timeout: 3000 });
@@ -127,20 +134,33 @@ onMounted(() => {
         });
 });
 
-const addPost = () => {
-    createPostService(post)
+const updatePost = () => {
+    console.log(post);
+    console.log(currentImage);
+    let newImageIds = [];
+    currentImage.value.forEach((item, index) => {
+        if (item.publicId === 0) {
+            newImageIds.push(post.imageIds[index]);
+        } else {
+            newImageIds.push(0);
+        }
+    });
+    (post.tagUserIds = tagUser.value.map((item) => item.userId)), (post.imageIds = newImageIds);
+    editPostService(post.postId, post)
         .then((res) => {
-            if (res.status === 201) {
-                postStore.addPost(res.data.data);
-                store.hidden();
-                toast.success('Đăng bài thành công', { timeout: 3000 });
+            if (res.status === 200) {
+                postStore.updatePost(res.data.data);
+                store.hiddenUpdate();
+                toast.success('Sửa bài thành công', { timeout: 3000 });
                 resetPost();
             } else if (res.status === 400) {
                 toast.error('Hình như bài đăng hơi linh tinh :(((', { timeout: 3000 });
+            } else {
+                toast.error('Có lỗi xẩy ra', { timeout: 3000 });
             }
         })
         .catch((err) => {
-            console.error(err);
+            toast.error('Có lỗi xẩy ra', { timeout: 3000 });
         });
 };
 
@@ -163,6 +183,13 @@ const getFile = (e) => {
 const removeImage = (publicId) => {
     post.publicIds = post.publicIds.filter((item) => item !== publicId);
     currentImage.value = currentImage.value.filter((item) => item.publicId !== publicId);
+};
+
+const handleClickTagUser = () => {
+    const tagUser = document.getElementById('tag-user-post');
+    if (tagUser) {
+        tagUser.focus();
+    }
 };
 </script>
 
@@ -205,6 +232,7 @@ const removeImage = (publicId) => {
                         </div>
                     </div>
                 </v-card-text>
+                <TagUserPostComponent2 v-if="!isLoadingPost" :selectedUsers="tagUser" @update:selectedUsers="tagUser = $event" />
             </div>
             <div class="w-full flex justify-center">
                 <div class="w-[calc(100%-60px)]">
@@ -261,7 +289,7 @@ const removeImage = (publicId) => {
                                 </label>
                                 <input type="file" id="fileUpload" class="hidden" @change="getFile" />
                             </div>
-                            <div class="hover:bg-gray-800 inline-block p-2 rounded-full cursor-pointer mr-1 w-10 h-10">
+                            <div class="hover:bg-gray-800 inline-block p-2 rounded-full cursor-pointer mr-1 w-10 h-10" @click="handleClickTagUser">
                                 <FileGifBox fillColor="#1C9CEF" :size="25" />
                             </div>
                             <div class="hover:bg-gray-800 inline-block p-2 rounded-full cursor-pointer mr-1 w-10 h-10">
@@ -271,7 +299,7 @@ const removeImage = (publicId) => {
                         <button
                             :class="canEdit ? 'bg-[#1C9CEF] text-white hover:bg-[#124D77]' : 'bg-[#124D77] text-gray-400 '"
                             :disabled="!canEdit"
-                            @click="addPost()"
+                            @click="updatePost()"
                             class="hidden md:block font-bold text-[16px] p-1.5 pl-6 pr-6 px-4 rounded-full cursor-unset"
                         >
                             Sửa

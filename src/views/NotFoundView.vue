@@ -1,4 +1,5 @@
 <script setup>
+import TagUserPostComponent2 from '@/components/TagUserPostComponent2.vue';
 import { ref, defineProps, watch, defineEmits } from 'vue';
 
 // Define the props
@@ -41,7 +42,11 @@ function handleClick() {
 </script>
 
 <template>
-    <template>
-        <div class="text-center pa-4"></div>
-    </template>
+    not found
+    <TagUserPostComponent2 />
+    <TagUserPostComponent2 />
+    <TagUserPostComponent2 />
+    <TagUserPostComponent2 />
+    <TagUserPostComponent2 />
+    <TagUserPostComponent2 />
 </template>

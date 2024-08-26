@@ -18,11 +18,14 @@ import 'vuetify/styles';
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
 import { createVuetify } from 'vuetify/lib/framework.mjs';
+import { createProPlugin, inputs } from '@formkit/pro';
+import { rootClasses } from '../formkit.theme.mjs';
 
 const app = createApp(App);
-
+const pro = createProPlugin('fk-79148156b2d', inputs);
 app.use(createPinia());
 app.use(router);
+
 const options = {
     // You can set your default options here
 };
@@ -84,7 +87,9 @@ app.use(
                 // otherwise, use the `:floating-label` prop
                 useAsDefault: true,
             }),
+            pro,
         ],
+        config: { rootClasses },
     }),
 );
 // app.use(IconsPlugin);

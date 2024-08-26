@@ -30,3 +30,8 @@ export const deltePostService = async (id) => {
     const response = await request.apiAuth.delete(`/api/v1/posts/${id}`);
     return response;
 };
+
+export const reactionPostService = async (id, body) => {
+    const response = await request.apiAuth.post(`/api/v1/reaction/post/${id}`, body);
+    return response;
+};

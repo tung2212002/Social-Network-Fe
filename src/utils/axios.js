@@ -19,7 +19,7 @@ const instance = (config = {}, auth = false) => {
             if (requestConfig.customHeaders) {
                 requestConfig.headers = { ...requestConfig.headers, ...requestConfig.customHeaders };
             }
-
+            console.log('requestConfig', requestConfig);
             return requestConfig;
         },
         (error) => {

@@ -7,13 +7,48 @@ import { removeAll } from '@/utils/authStorage/authLocalStorage';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import SuggestFriendDetailComponent from './SuggestFriendDetailComponent.vue';
+import { deleteFriendService, requestFriendService } from '@/services/friend/friendService';
 
 const props = defineProps({
     friend: Object,
 });
 
-const friend = props.friend;
+const friend = ref(props.friend);
 const isMenuOpen = ref(false);
+
+const handleRequestFriend = () => {
+    const body = {
+        userReceiveId: friend.value.user.userId,
+        status: 'CLOSE_FRIEND',
+    };
+
+    requestFriendService(body)
+        .then((res) => {
+            if (res.status === 200) {
+                friend.value.status = 'PENDING';
+            }
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+};
+
+const unRequestFriend = () => {
+    const body = {
+        userId: friend.value.user.userId,
+        status: 'CLOSE_FRIEND',
+    };
+
+    deleteFriendService(body)
+        .then((res) => {
+            if (res.status === 200) {
+                friend.value.status = null;
+            }
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+};
 </script>
 
 <template>
@@ -34,8 +69,11 @@ const isMenuOpen = ref(false);
                     </div>
                     <p class="email">{{ friend?.user?.userEmail }}</p>
                 </v-card-text>
-                <button class="btn-friend">
-                    <span> Kết bạn </span>
+                <button class="btn-friend" @click="unRequestFriend" v-if="friend.status === 'PENDING'">
+                    <span v-if="friend.status === 'PENDING'">Hủy yêu cầu</span>
+                </button>
+                <button class="btn-friend" @click="handleRequestFriend" v-if="friend.status === null">
+                    <span>Kết bạn</span>
                 </button>
             </button>
         </div>
@@ -43,6 +81,10 @@ const isMenuOpen = ref(false);
 </template>
 
 <style scoped>
+.container {
+    z-index: 0;
+}
+
 .position-relative {
 }
 .btn-info {

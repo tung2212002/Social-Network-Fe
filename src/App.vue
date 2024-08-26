@@ -11,6 +11,9 @@
             :agreeText="dialogInfo.agreeText"
             :disagreeText="dialogInfo.disagreeText"
         ></ConfirmDialog>
+        <EditPostComponent v-if="isOpenEditPost" />
+        <CreatePostComponent />
+        <ModalTagUserPostComponent v-if="openTagUser" />
     </component>
 </template>
 
@@ -19,15 +22,22 @@ import { computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DefaultLayout from './layouts/DefaultLayout.vue';
 import { useDocumentTitle } from './hooks/useDocumentTitle';
-import { LoadingComponent } from './components';
+import { CreatePostComponent, LoadingComponent } from './components';
 import { useTheme } from 'vuetify';
 import ConfirmDialog from './components/ConfirmDialog.vue';
-import { useDialogStore } from './stores';
+import { useCreaPostStore, useDialogStore, useLoadingStore, useModalStore } from './stores';
+import EditPostComponent from './components/EditPostComponent.vue';
+import ModalTagUserPostComponent from './components/ModalTagUserPostComponent.vue';
 
 const route = useRoute();
 const layout = computed(() => route.meta.layout || DefaultLayout);
 const dialogStore = useDialogStore();
 const dialogInfo = computed(() => dialogStore.getDialogInfo);
+const editPostStore = useCreaPostStore();
+const isOpenEditPost = computed(() => editPostStore.getOpenUpdate);
+const loadingStore = useModalStore();
+console.log(loadingStore);
+const openTagUser = computed(() => loadingStore.getModal);
 
 useDocumentTitle('Cà khịa Social');
 

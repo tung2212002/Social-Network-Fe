@@ -9,6 +9,7 @@ export const useDialogStore = defineStore('dialog', {
         disagreeText: '',
         agreeFunc: null,
         disagreeFunc: null,
+        data: null,
     }),
     getters: {
         getDialog: (state) => state.dialog,
@@ -24,10 +25,11 @@ export const useDialogStore = defineStore('dialog', {
             disagreeText: state.disagreeText,
             agreeFunc: state.agreeFunc,
             disagreeFunc: state.disagreeFunc,
+            data: state.data,
         }),
     },
     actions: {
-        show(title, content, agreeText, disagreeText, agreeFunc, disagreeFunc) {
+        show(title, content, agreeText, disagreeText, agreeFunc, disagreeFunc, data) {
             this.dialog = true;
             this.title = title;
             this.content = content;
@@ -35,6 +37,7 @@ export const useDialogStore = defineStore('dialog', {
             this.disagreeText = disagreeText;
             this.agreeFunc = agreeFunc;
             this.disagreeFunc = disagreeFunc;
+            this.data = data;
         },
         hidden() {
             this.dialog = false;
@@ -44,6 +47,7 @@ export const useDialogStore = defineStore('dialog', {
             this.disagreeText = '';
             this.agreeFunc = null;
             this.disagreeFunc = null;
+            this.data = null;
         },
     },
 });
