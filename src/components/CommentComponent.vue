@@ -1,6 +1,12 @@
 <script setup>
 import { icons } from '@/assets';
-import { createCommentChildService, getListCommentChildByCommentIdService, reactionCommentService } from '@/services/post/commentService';
+import {
+    createCommentChildService,
+    deleteCommentService,
+    editCommentService,
+    getListCommentChildByCommentIdService,
+    reactionCommentService,
+} from '@/services/post/commentService';
 import getDeltaTime from '@/utils/getDeltaTime';
 import { reactive } from 'vue';
 import { ref } from 'vue';
@@ -11,14 +17,28 @@ import { upImageCommentService } from '@/services/post/imageService';
 import { useToast } from 'vue-toastification';
 import Close from 'vue-material-design-icons/Close.vue';
 import ImageOutline from 'vue-material-design-icons/ImageOutline.vue';
+import { useDialogStore, usePostStore, useUserStore } from '@/stores';
+import { blockUserService } from '@/services/friend/blockSerice';
+import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
+import { computed } from 'vue';
 
 const router = useRouter();
 const props = defineProps({
     comment: Object,
+    listComment: Array,
 });
 const toast = useToast();
 
 const comment = ref(props.comment);
+const isEdit = ref(false);
+const edit = () => {
+    isEdit.value = true;
+};
+
+const exitEdit = () => {
+    isEdit.value = false;
+};
+
 const state = reactive({
     page: 0,
     size: 1,
@@ -30,6 +50,16 @@ const newCommnet = reactive({
     postId: comment.value.postId,
     content: '',
     publicId: '',
+});
+
+const editComment = reactive({
+    content: comment.value.content,
+    postId: comment.value.postId,
+});
+
+const editImage = reactive({
+    imageLocal: comment.value.imageUrl,
+    publicId: comment.value.imagePublicId,
 });
 
 const fileUpload = ref(null);
@@ -120,6 +150,30 @@ const handleNavigateToProfile = (userId) => {
     router.push(`/profile/${userId}`);
 };
 
+const getFile = (e) => {
+    const file = e.target.files[0];
+    if (file.size > 1024 * 1024 * 5) {
+        toast.error('File quá lớn', { timeout: 3000 });
+    } else if (!file.type.includes('image')) {
+        toast.error('File không phải là ảnh', { timeout: 3000 });
+    } else {
+        fileUpload.value = file;
+        handleUploadImagePost();
+    }
+};
+
+const getFileEdit = (e) => {
+    const file = e.target.files[0];
+    if (file.size > 1024 * 1024 * 5) {
+        toast.error('File quá lớn', { timeout: 3000 });
+    } else if (!file.type.includes('image')) {
+        toast.error('File không phải là ảnh', { timeout: 3000 });
+    } else {
+        fileUpload.value = file;
+        handleUploadImagePostEdit();
+    }
+};
+
 const handleUploadImagePost = () => {
     const body = new FormData();
     body.append('image', fileUpload.value);
@@ -129,6 +183,28 @@ const handleUploadImagePost = () => {
                 image.value.imageLocal = URL.createObjectURL(fileUpload.value);
                 image.value.publicId = res.data.data.publicId;
                 fileUpload.value = null;
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+};
+
+const handleUploadImagePostEdit = () => {
+    const body = new FormData();
+    body.append('image', fileUpload.value);
+    upImageCommentService(body)
+        .then((res) => {
+            if (res.status === 200) {
+                console.log(res.data.data.publicId);
+                console.log(URL.createObjectURL(fileUpload.value));
+                editImage.imageLocal = URL.createObjectURL(fileUpload.value);
+                console.log(editImage);
+                editImage.publicId = res.data.data.publicId;
+                console.log(editImage);
+                fileUpload.value = null;
+                console.log(editImage);
+                console.log('editImage');
             }
         })
         .catch((err) => {
@@ -150,6 +226,7 @@ const addComment = () => {
                 newCommnet.publicId = '';
                 image.value.imageLocal = '';
                 image.value.publicId = '';
+                emit('addComment', res.data.data);
             } else if (res.status === 400) {
                 toast.error('Hình như bài đăng hơi linh tinh :(((', { timeout: 3000 });
             }
@@ -159,18 +236,129 @@ const addComment = () => {
         });
 };
 
-const getFile = (e) => {
-    const file = e.target.files[0];
-    if (file.size > 1024 * 1024 * 5) {
-        toast.error('File quá lớn', { timeout: 3000 });
-    } else if (!file.type.includes('image')) {
-        toast.error('File không phải là ảnh', { timeout: 3000 });
-    } else {
-        fileUpload.value = file;
-        handleUploadImagePost();
-    }
+const handleEditComment = () => {
+    const body = {
+        postId: editComment.postId,
+        content: editComment.content,
+        publicId: editImage.publicId,
+    };
+    editCommentService(comment.value.commentId, body)
+        .then((res) => {
+            if (res.status === 200) {
+                comment.value.content = res.data.data.content;
+                comment.value.imageUrl = res.data.data.imageUrl;
+                isEdit.value = false;
+                // emit('addComment', res.data.data);
+            } else if (res.status === 400) {
+                toast.error('Hình như bài đăng hơi linh tinh :(((', { timeout: 3000 });
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+        });
 };
 
+const dialogStore = useDialogStore();
+const postStore = usePostStore();
+const emit = defineEmits(['update:listComment', 'deleteComment', 'addComment', 'deleteCommentChild']);
+
+const handleDeleteComment = () => {
+    deleteCommentService(comment.value.commentId)
+        .then((res) => {
+            if (res.status == 200) {
+                emit('deleteComment', comment.value.commentId);
+                dialogStore.hidden();
+                toast.success('Xóa bình luận thành công', { timeout: 3000 });
+            } else {
+                toast.error('Xóa bình luận thất bại', { timeout: 3000 });
+            }
+        })
+        .catch((e) => {
+            toast.error('Có lỗi xảy ra thử lại sau', { timeout: 3000 });
+        });
+};
+
+const handleDeleteCommentChild = (commentId) => {
+    state.comment = state.comment.filter((c) => c.commentId !== commentId);
+    comment.value.repliesQuantity -= 1;
+    emit('deleteCommentChild', commentId);
+};
+
+const handleOpenDialogDeleteComment = () => {
+    dialogStore.show('Xác nhận xóa bình luận', 'Bạn sẽ không thể khôi phục bình luận này sau khi xóa', 'Xóa', 'Thoát', handleDeleteComment, closeDialog);
+};
+
+const handleBlockUser = () => {
+    const body = {
+        userId: comment.value.user.userId,
+    };
+    blockUserService(body)
+        .then((res) => {
+            if (res.status === 200) {
+                postStore.removePostByUserId(comment.value.user.userId);
+                toast.success('Chặn người dùng thành công', { timeout: 3000 });
+                dialogStore.hidden();
+            } else {
+                toast.error('Chặn người dùng thất bại', { timeout: 3000 });
+            }
+        })
+        .catch((e) => {
+            toast.error('Có lỗi xảy ra thử lại sau', { timeout: 3000 });
+        });
+};
+
+const handleOpenDialogBlockUser = () => {
+    dialogStore.show(
+        'Chặn người dùng',
+        `Bạn và ${comment.value.user.lastName} ${comment.value.user.firstName} sẽ không thể nhìn thấy nhau trên mạng xã hội`,
+        'Chặn',
+        'Thoát',
+        handleBlockUser,
+        closeDialog,
+    );
+};
+
+const closeDialog = () => {
+    dialogStore.hidden();
+};
+
+const handleOpenEditComment = () => {
+    edit();
+};
+
+const actions = [
+    {
+        icon: 'ri-delete-bin-line',
+        text: 'Xóa bình luận',
+        color: 'red',
+        isOwner: true,
+        class: 'delete-post-btn',
+        action: handleOpenDialogDeleteComment,
+    },
+    {
+        icon: 'ri-edit-box-line',
+        text: 'Chỉnh sửa bình luận',
+        isOwner: true,
+        action: handleOpenEditComment,
+    },
+    {
+        icon: 'ri-lock-2-line',
+        text: 'Chặn chủ bình luận',
+        notMe: true,
+        action: handleOpenDialogBlockUser,
+    },
+];
+
+let openOptions = ref(false);
+const removeImage = () => {
+    image.value.imageLocal = '';
+    image.value.publicId = '';
+};
+
+const removeEditImage = () => {
+    editImage.imageLocal = '';
+    editImage.publicId = '';
+};
 
 const handleGetMoreComment = () => {
     const params = {
@@ -193,10 +381,40 @@ const handleGetMoreComment = () => {
             console.error(err);
         });
 };
+
+const user = useUserStore().getUser;
+
+const isOwner = computed(() => {
+    return user.userId === comment.value.user.userId;
+});
 </script>
 
 <template>
-    <div class="w-full flex">
+    <div class="w-full flex relative">
+        <v-container fluid class="hover:bg-gray-800 rounded-full cursor-pointer absolute top-0 right-0 dots-btn">
+            <v-row justify="center">
+                <v-menu rounded activator="parent" location="bottom">
+                    <template v-slot:activator="{ props }">
+                        <button type="button" class="block p-2">
+                            <DotsHorizontal @click="openOptions = !openOptions" />
+                        </button>
+                    </template>
+
+                    <v-card class="menu">
+                        <ul v-for="(action, index) in actions" :key="index" class="p-0 m-0">
+                            <v-btn
+                                class="text-red-600 font-normal hover:bg-gray-800 rounded-full cursor-pointer menu-btn"
+                                v-if="(action.isOwner && isOwner) || (action.notMe && !isOwner)"
+                                @click="action.action"
+                            >
+                                <i :class="action.icon"></i>
+                                <span class="font-normal menu-text" :class="`text-${action.color}` + ' ' + action.class">{{ action.text }}</span>
+                            </v-btn>
+                        </ul>
+                    </v-card>
+                </v-menu>
+            </v-row>
+        </v-container>
         <div class="min-w-[60px] avatar" @click="handleNavigateToProfile(comment.user.userId)">
             <img class="rounded-full m-2 mt-3" width="50" :src="comment?.user?.avatar || icons.defaultAvatar" />
         </div>
@@ -208,25 +426,66 @@ const handleGetMoreComment = () => {
                     {{ comment?.user?.userEmail }}
                 </span>
             </div>
-            <div>
+            <div v-if="!isEdit" class="mt-2">
                 {{ comment.content }}
             </div>
-            <v-col class="relative" v-if="comment.imageUrl" style="max-height: 100px; padding-left: 0;">
+            <v-col class="relative" v-if="comment.imageUrl && !isEdit" style="max-height: 100px; padding-left: 0">
                 <v-img :src="comment.imageUrl" aspect-ratio="1" class="bg-grey-lighten-2 border-radius-10 rounded-xl image" cover style="max-height: 100px">
                     <template v-slot:placeholder>
-                        <v-row align="center" class=" ma-0" justify="center">
+                        <v-row align="center" class="ma-0" justify="center">
                             <v-progress-circular color="grey-lighten-5" indeterminate></v-progress-circular>
                         </v-row>
                     </template>
                 </v-img>
             </v-col>
+
+            <div class="input-container-edit relative" v-if="isEdit">
+                <div class="hover:bg-gray-800 inline-block p-2 rounded-full cursor-pointer mr-1 w-10 h-10">
+                    <label :for="`fileUpload-comment-edit-${comment.commentId}`" class="cursor-pointer">
+                        <ImageOutline fillColor="#1C9CEF" :size="25" />
+                    </label>
+                    <input type="file" :id="`fileUpload-comment-edit-${comment.commentId}`" class="hidden" @change="getFileEdit" />
+                </div>
+                <div class="flex-1 images-input">
+                    <v-col class="relative" v-if="editImage.imageLocal" style="max-height: 100px">
+                        <div
+                            @click="removeEditImage()"
+                            class="hover:bg-gray-800 inline-block rounded-full cursor-pointer absolute top-5 right-5 bg-black hover:bg-gray-800 z-10 p-1 close-icon"
+                        >
+                            <Close fillColor="#FFFFFF" :size="24" class="" />
+                        </div>
+                        <v-img
+                            :src="editImage.imageLocal"
+                            aspect-ratio="1"
+                            class="bg-grey-lighten-2 border-radius-10 rounded-xl image"
+                            cover
+                            style="max-height: 100px"
+                        >
+                            <template v-slot:placeholder>
+                                <v-row align="center" class="ma-0" justify="center">
+                                    <v-progress-circular color="grey-lighten-5" indeterminate></v-progress-circular>
+                                </v-row>
+                            </template>
+                        </v-img>
+                    </v-col>
+                    <input type="text" placeholder="Nhập bình luận..." v-model="editComment.content" class="mt-4 w-full" />
+                </div>
+
+                <button @click="handleEditComment" color="primary" class="mr-2" :disabled="!editComment.content && !editImage.imageLocal">
+                    <span class="font-[300] text-[15px] text-gray-500 font-bold">Gửi</span>
+                </button>
+                <span
+                    class="font-[300] text-[12px] text-gray-500 font-bold pl-2 absolute top-100 left-0 hover:bg-gray-800 inline-block rounded-full cursor-pointer p-1"
+                    @click="exitEdit"
+                >
+                    Hủy
+                </span>
+            </div>
         </div>
     </div>
     <div class="flex items-center pl-20 pb-2">
         <span class="font-[300] text-[12px] text-gray-500 font-bold">{{ getDeltaTime(comment.createAt) }}</span>
-        <span class="font-[300] text-[12px] text-gray-500 font-bold pl-2 replies" @click="inputShow = true">
-            Trả lời
-        </span>
+        <span class="font-[300] text-[12px] text-gray-500 font-bold pl-2 replies" @click="inputShow = true"> Trả lời </span>
         <div class="flex reaction">
             <div class="reaction-container">
                 <div class="reaction-trigger" @mouseover="showReactions" @mouseleave="hideReactions">
@@ -248,19 +507,19 @@ const handleGetMoreComment = () => {
                 </div>
             </div>
         </div>
-      
+
         <span v-if="comment.reactionsQuantity > 0" class="font-[300] text-[12px] text-gray-500 font-bold pl-2">
             {{ comment.reactionsQuantity }} tương tác
         </span>
     </div>
-   
+
     <div v-show="state.comment.length > 0" class="comment-replies">
         <div class="flex flex-col" v-for="comment in state.comment" :key="comment.commentId">
-            <CommentChildComponent :comment="comment" />
+            <CommentChildComponent :comment="comment" @deleteCommentChild="handleDeleteCommentChild" />
         </div>
     </div>
     <div
-        v-if="comment.repliesQuantity > 0 && state.hasMore"
+        v-if="comment.repliesQuantity > 0 && state.hasMore && comment.repliesQuantity - state.comment.length > 0"
         class="text-gray-500 text-[15px] font-bold cursor-pointer pl-20 pb-2"
         @click="handleGetMoreComment"
     >
@@ -272,8 +531,7 @@ const handleGetMoreComment = () => {
             <label :for="`fileUpload-comment-${comment.commentId}`" class="cursor-pointer">
                 <ImageOutline fillColor="#1C9CEF" :size="25" />
             </label>
-            <input type="file" :id="`fileUpload-comment-${comment.commentId}`"
-             class="hidden" @change="getFile" />
+            <input type="file" :id="`fileUpload-comment-${comment.commentId}`" class="hidden" @change="getFile" />
         </div>
         <div class="flex-1 images-input">
             <v-col class="relative" v-if="image.imageLocal" style="max-height: 100px">
@@ -285,13 +543,13 @@ const handleGetMoreComment = () => {
                 </div>
                 <v-img :src="image.imageLocal" aspect-ratio="1" class="bg-grey-lighten-2 border-radius-10 rounded-xl image" cover style="max-height: 100px">
                     <template v-slot:placeholder>
-                        <v-row align="center" class=" ma-0" justify="center">
+                        <v-row align="center" class="ma-0" justify="center">
                             <v-progress-circular color="grey-lighten-5" indeterminate></v-progress-circular>
                         </v-row>
                     </template>
                 </v-img>
             </v-col>
-            <input type="text" placeholder="Nhập bình luận..." v-model="newCommnet.content" class="mt-4 w-full" style="margin-top: 0px !important" />
+            <input type="text" placeholder="Nhập bình luận..." v-model="newCommnet.content" class="mt-4 w-full" />
         </div>
 
         <v-btn @click="addComment" color="primary" class="mr-2" :disabled="!newCommnet.content && !image.imageLocal">
@@ -301,7 +559,7 @@ const handleGetMoreComment = () => {
 </template>
 
 <style>
-.image[data-v-19e4945f]{
+.image[data-v-19e4945f] {
     min-height: 50px !important;
 }
 </style>
@@ -330,7 +588,7 @@ const handleGetMoreComment = () => {
     }
 }
 
-.replies{
+.replies {
     cursor: pointer;
 
     &:hover {
@@ -476,7 +734,6 @@ const handleGetMoreComment = () => {
     height: 30px;
 }
 
-
 .close {
     position: absolute;
     top: 0 !important;
@@ -499,6 +756,14 @@ const handleGetMoreComment = () => {
 
 .input-container {
     margin-left: 50px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.input-container-edit {
     display: flex;
     align-items: center;
     border: 1px solid #ccc;

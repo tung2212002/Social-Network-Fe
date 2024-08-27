@@ -7,7 +7,14 @@
             <template v-if="!state.isLoading">
                 <div class="w-full comments">
                     <div class="flex flex-col" v-for="comment in state.comment" :key="comment.commentId">
-                        <CommentComponent :comment="comment" />
+                        <CommentComponent
+                            :comment="comment"
+                            :listComment="state.comment"
+                            @update:listComment="state.comment = $event"
+                            @deleteComment="handleCommentDeleted"
+                            @addComment="handleAddComment"
+                            @deleteCommentChild="handleDeleteCommentChild"
+                        />
                     </div>
                 </div>
             </template>
@@ -26,15 +33,21 @@
                         >
                             <Close fillColor="#FFFFFF" :size="24" class="" />
                         </div>
-                        <v-img :src="image.imageLocal" aspect-ratio="1" class="bg-grey-lighten-2 border-radius-10 rounded-xl image" cover style="max-height: 100px">
+                        <v-img
+                            :src="image.imageLocal"
+                            aspect-ratio="1"
+                            class="bg-grey-lighten-2 border-radius-10 rounded-xl image"
+                            cover
+                            style="max-height: 100px"
+                        >
                             <template v-slot:placeholder>
-                                <v-row align="center" class=" ma-0" justify="center">
+                                <v-row align="center" class="ma-0" justify="center">
                                     <v-progress-circular color="grey-lighten-5" indeterminate></v-progress-circular>
                                 </v-row>
                             </template>
                         </v-img>
                     </v-col>
-                    <input type="text" placeholder="Nhập bình luận..." v-model="comment.content" class="mt-4 w-full" />
+                    <input type="text" placeholder="Nhập bình luận..." v-model="comment.content" class="mt-4 w-full input-comment" />
                 </div>
 
                 <v-btn @click="addComment" color="primary" class="mr-2" :disabled="!comment.content && !image.imageLocal">
@@ -58,18 +71,20 @@ import Close from 'vue-material-design-icons/Close.vue';
 const props = defineProps({
     postId: Number,
     openComment: Boolean,
+    post: Object,
 });
 
 const router = useRouter();
 const dialog = ref(props.openComment);
 const toast = useToast();
 const postId = ref(props.postId);
+const post = ref(props.post);
 const fileUpload = ref(null);
 const image = ref({
     imageLocal: '',
     publicId: '',
 });
-const emit = defineEmits(['update:openComment']);
+const emit = defineEmits(['update:openComment', 'update:post']);
 
 const comment = reactive({
     postId: postId.value,
@@ -95,7 +110,24 @@ watch(dialog, (newValue) => {
     emit('update:openComment', newValue);
 });
 
-const removeImage = (publicId) => {
+const handleCommentDeleted = (deletedCommentId) => {
+    const comment = state.comment.find((comment) => comment.commentId === deletedCommentId);
+    post.value.commentQuantity -= comment.repliesQuantity + 1;
+    state.comment = state.comment.filter((comment) => comment.commentId !== deletedCommentId);
+    emit('update:post', post.value);
+};
+
+const handleDeleteCommentChild = (deletedCommentId) => {
+    post.value.commentQuantity -= 1;
+    emit('update:post', post.value);
+};
+
+const handleAddComment = (newComment) => {
+    post.value.commentQuantity += 1;
+    emit('update:post', post.value);
+};
+
+const removeImage = () => {
     image.value.imageLocal = '';
     image.value.publicId = '';
 };
@@ -109,6 +141,7 @@ const handleGetComment = () => {
         .then((res) => {
             if (res.status === 200) {
                 state.comment = res.data.data;
+                console.log(state.comment);
             } else {
                 console.error(res);
             }
@@ -158,6 +191,8 @@ const addComment = () => {
                 comment.publicId = '';
                 image.value.imageLocal = '';
                 image.value.publicId = '';
+                post.value.commentQuantity += 1;
+                emit('update:post', post.value);
             } else if (res.status === 400) {
                 toast.error('Hình như bài đăng hơi linh tinh :(((', { timeout: 3000 });
             }
@@ -185,8 +220,12 @@ onMounted(() => {
 </script>
 
 <style>
-.image[data-v-b232f265]{
+.image[data-v-b232f265] {
     min-height: 50px !important;
+}
+
+.input-comment.mt-4 {
+    margin-top: 0 !important;
 }
 </style>
 

@@ -5,9 +5,16 @@ import { reactive } from 'vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import ThumbUpOutline from 'vue-material-design-icons/ThumbUpOutline.vue';
-import { reactionCommentService } from '@/services/post/commentService';
+import { deleteCommentService, editCommentService, reactionCommentService } from '@/services/post/commentService';
+import { blockUserService } from '@/services/friend/blockSerice';
+import { useDialogStore, usePostStore, useUserStore } from '@/stores';
+import { useToast } from 'vue-toastification';
+import { computed } from 'vue';
+import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
+import Close from 'vue-material-design-icons/Close.vue';
+import ImageOutline from 'vue-material-design-icons/ImageOutline.vue';
+import { upImageCommentService } from '@/services/post/imageService';
 
-const router = useRouter();
 const props = defineProps({
     comment: Object,
 });
@@ -18,6 +25,7 @@ const state = reactive({
     size: 10,
     comment: [],
 });
+const router = useRouter();
 const handleNavigateToProfile = (userId) => {
     router.push(`/profile/${userId}`);
 };
@@ -97,6 +105,172 @@ const handleReaction = (reaction) => {
             console.error(err);
         });
 };
+
+const dialogStore = useDialogStore();
+const toast = useToast();
+const postStore = usePostStore();
+const user = useUserStore().getUser;
+const isEdit = ref(false);
+
+const isOwner = computed(() => {
+    return user.userId === comment.value.user.userId;
+});
+const edit = () => {
+    isEdit.value = true;
+};
+
+const exitEdit = () => {
+    isEdit.value = false;
+};
+
+const emit = defineEmits(['deleteCommentChild']);
+const handleOpenEditComment = () => {
+    edit();
+};
+const handleDeleteComment = () => {
+    deleteCommentService(comment.value.commentId)
+        .then((res) => {
+            if (res.status == 200) {
+                emit('deleteCommentChild', comment.value.commentId);
+                dialogStore.hidden();
+                toast.success('Xóa bình luận thành công', { timeout: 3000 });
+            } else {
+                toast.error('Xóa bình luận thất bại', { timeout: 3000 });
+            }
+        })
+        .catch((e) => {
+            toast.error('Có lỗi xảy ra thử lại sau', { timeout: 3000 });
+        });
+};
+
+const handleOpenDialogDeleteComment = () => {
+    dialogStore.show('Xác nhận xóa bình luận', 'Bạn sẽ không thể khôi phục bình luận này sau khi xóa', 'Xóa', 'Thoát', handleDeleteComment, closeDialog);
+};
+
+const handleOpenDialogBlockUser = () => {
+    dialogStore.show(
+        'Chặn người dùng',
+        `Bạn và ${comment.value.user.lastName} ${comment.value.user.firstName} sẽ không thể nhìn thấy nhau trên mạng xã hội`,
+        'Chặn',
+        'Thoát',
+        handleBlockUser,
+        closeDialog,
+    );
+};
+const handleBlockUser = () => {
+    const body = {
+        userId: comment.value.user.userId,
+    };
+    blockUserService(body)
+        .then((res) => {
+            if (res.status === 200) {
+                postStore.removePostByUserId(comment.value.user.userId);
+                toast.success('Chặn người dùng thành công', { timeout: 3000 });
+                dialogStore.hidden();
+            } else {
+                toast.error('Chặn người dùng thất bại', { timeout: 3000 });
+            }
+        })
+        .catch((e) => {
+            toast.error('Có lỗi xảy ra thử lại sau', { timeout: 3000 });
+        });
+};
+const closeDialog = () => {
+    dialogStore.hidden();
+};
+const fileUpload = ref(null);
+const editComment = reactive({
+    content: comment.value.content,
+    postId: comment.value.postId,
+});
+
+const editImage = reactive({
+    imageLocal: comment.value.imageUrl,
+    publicId: comment.value.imagePublicId,
+});
+
+let openOptions = ref(false);
+const actions = [
+    {
+        icon: 'ri-delete-bin-line',
+        text: 'Xóa bình luận',
+        color: 'red',
+        isOwner: true,
+        class: 'delete-post-btn',
+        action: handleOpenDialogDeleteComment,
+    },
+    {
+        icon: 'ri-edit-box-line',
+        text: 'Chỉnh sửa bình luận',
+        isOwner: true,
+        action: handleOpenEditComment,
+    },
+    {
+        icon: 'ri-lock-2-line',
+        text: 'Chặn chủ bình luận',
+        notMe: true,
+        action: handleOpenDialogBlockUser,
+    },
+];
+
+const handleOpenOptions = () => {
+    openOptions.value = !openOptions.value;
+};
+
+const removeEditImage = () => {
+    editImage.imageLocal = '';
+    editImage.publicId = '';
+};
+
+const getFileEdit = (e) => {
+    const file = e.target.files[0];
+    if (file.size > 1024 * 1024 * 5) {
+        toast.error('File quá lớn', { timeout: 3000 });
+    } else if (!file.type.includes('image')) {
+        toast.error('File không phải là ảnh', { timeout: 3000 });
+    } else {
+        fileUpload.value = file;
+        handleUploadImagePostEdit();
+    }
+};
+
+const handleUploadImagePostEdit = () => {
+    const body = new FormData();
+    body.append('image', fileUpload.value);
+    upImageCommentService(body)
+        .then((res) => {
+            if (res.status === 200) {
+                editImage.imageLocal = URL.createObjectURL(fileUpload.value);
+                editImage.publicId = res.data.data.publicId;
+                fileUpload.value = null;
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+};
+
+const handleEditComment = () => {
+    const body = {
+        postId: editComment.postId,
+        content: editComment.content,
+        publicId: editImage.publicId,
+    };
+    editCommentService(comment.value.commentId, body)
+        .then((res) => {
+            if (res.status === 200) {
+                comment.value.content = res.data.data.content;
+                comment.value.imageUrl = res.data.data.imageUrl;
+                isEdit.value = false;
+                // emit('addComment', res.data.data);
+            } else if (res.status === 400) {
+                toast.error('Hình như bài đăng hơi linh tinh :(((', { timeout: 3000 });
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+};
 </script>
 
 <template>
@@ -104,7 +278,7 @@ const handleReaction = (reaction) => {
         <div class="min-w-[40px] avatar" @click="handleNavigateToProfile(comment.user.userId)">
             <img class="rounded-full m-2 mt-3" width="40" :src="comment?.user?.avatar || icons.defaultAvatar" />
         </div>
-        <div class="w-fit-content p-2 flex flex-col justify-center bg-gray-100 rounded-lg m-2">
+        <div class="w-fit-content p-2 flex flex-col justify-center bg-gray-100 rounded-lg m-2 relative">
             <div class="flex items-center">
                 <div @click="handleNavigateToProfile(comment.user.userId)" class="full-name">{{ comment?.user.lastName }} {{ comment?.user.firstName }}</div>
                 <span class="font-[300] text-[12px] text-gray-500 pl-2">.</span>
@@ -112,9 +286,84 @@ const handleReaction = (reaction) => {
                     {{ comment?.user?.userEmail }}
                 </span>
             </div>
-            <div class="text-[13px]">
+            <div class="text-[13px]" v-if="!isEdit">
                 {{ comment.content }}
             </div>
+            <v-col class="relative" v-if="comment.imageUrl && !isEdit" style="max-height: 100px; padding-left: 0; min-width: 100px">
+                <v-img :src="comment.imageUrl" aspect-ratio="1" class="bg-grey-lighten-2 border-radius-10 rounded-xl image" cover style="max-height: 100px">
+                    <template v-slot:placeholder>
+                        <v-row align="center" class="ma-0" justify="center">
+                            <v-progress-circular color="grey-lighten-5" indeterminate></v-progress-circular>
+                        </v-row>
+                    </template>
+                </v-img>
+            </v-col>
+            <div class="input-container-edit relative" v-if="isEdit">
+                <div class="hover:bg-gray-800 inline-block p-2 rounded-full cursor-pointer mr-1 w-10 h-10">
+                    <label :for="`fileUpload-comment-edit-${comment.commentId}`" class="cursor-pointer">
+                        <ImageOutline fillColor="#1C9CEF" :size="25" />
+                    </label>
+                    <input type="file" :id="`fileUpload-comment-edit-${comment.commentId}`" class="hidden" @change="getFileEdit" />
+                </div>
+                <div class="flex-1 images-input flex items-center">
+                    <v-col class="relative" v-if="editImage.imageLocal" style="max-height: 100px">
+                        <div
+                            @click="removeEditImage()"
+                            class="hover:bg-gray-800 inline-block rounded-full cursor-pointer absolute top-5 right-5 bg-black hover:bg-gray-800 z-10 p-1 close-icon"
+                        >
+                            <Close fillColor="#FFFFFF" :size="24" class="" />
+                        </div>
+                        <v-img
+                            :src="editImage.imageLocal"
+                            aspect-ratio="1"
+                            class="bg-grey-lighten-2 border-radius-10 rounded-xl image"
+                            cover
+                            style="max-height: 100px"
+                        >
+                            <template v-slot:placeholder>
+                                <v-row align="center" class="ma-0" justify="center">
+                                    <v-progress-circular color="grey-lighten-5" indeterminate></v-progress-circular>
+                                </v-row>
+                            </template>
+                        </v-img>
+                    </v-col>
+                    <input type="text" placeholder="Nhập bình luận..." v-model="editComment.content" class="mt-4 w-full" />
+                </div>
+
+                <button @click="handleEditComment" color="primary" class="mr-2" :disabled="!editComment.content && !editImage.imageLocal">
+                    <span class="font-[300] text-[15px] text-gray-500 font-bold">Gửi</span>
+                </button>
+                <span
+                    class="font-[300] text-[12px] text-gray-500 font-bold pl-2 absolute top-100 left-0 hover:bg-gray-800 inline-block rounded-full cursor-pointer p-1"
+                    @click="exitEdit"
+                >
+                    Hủy
+                </span>
+            </div>
+            <v-container fluid class="hover:bg-gray-800 rounded-full cursor-pointer absolute top-0 dots-btn">
+                <v-row justify="center">
+                    <v-menu rounded activator="parent" location="bottom">
+                        <template v-slot:activator="{ props }">
+                            <button type="button" class="block p-2">
+                                <DotsHorizontal @click="openOptions = !openOptions" />
+                            </button>
+                        </template>
+
+                        <v-card class="menu">
+                            <ul v-for="(action, index) in actions" :key="index" class="p-0 m-0">
+                                <v-btn
+                                    class="text-red-600 font-normal hover:bg-gray-800 rounded-full cursor-pointer menu-btn"
+                                    v-if="(action.isOwner && isOwner) || (action.notMe && !isOwner)"
+                                    @click="action.action"
+                                >
+                                    <i :class="action.icon"></i>
+                                    <span class="font-normal menu-text" :class="`text-${action.color}` + ' ' + action.class">{{ action.text }}</span>
+                                </v-btn>
+                            </ul>
+                        </v-card>
+                    </v-menu>
+                </v-row>
+            </v-container>
         </div>
     </div>
     <div class="flex items-center pl-14 pb-1">
@@ -140,13 +389,18 @@ const handleReaction = (reaction) => {
                     </div>
                 </div>
             </div>
-            <!-- <span class="text-xs font-extrabold text-[#5e5c5c] ml-3">{{ comment.reactionsQuantity }}</span> -->
         </div>
         <span v-if="comment.reactionsQuantity > 0" class="font-[300] text-[12px] text-gray-500 font-bold pl-2">
             {{ comment.reactionsQuantity }} tương tác
         </span>
     </div>
 </template>
+
+<style>
+.image[data-v-5e5f9b85] {
+    min-height: 50px !important;
+}
+</style>
 
 <style scoped>
 .comment {
@@ -219,6 +473,7 @@ const handleReaction = (reaction) => {
 .dots-btn {
     width: fit-content;
     margin: 0;
+    left: 100%;
 }
 
 .delete-post-btn {
@@ -305,7 +560,68 @@ const handleReaction = (reaction) => {
     height: 30px;
 }
 
+.icon {
+    margin-left: 10px;
+}
+
 .like-default {
     margin-left: 10px;
+}
+
+.input-container {
+    margin-left: 50px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.input-container-edit {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.input-container input[type='text'] {
+    border: none;
+    outline: none;
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    color: #333;
+    background-color: transparent;
+}
+
+.input-container input[type='file'] {
+    display: none;
+}
+
+.input-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: #007bff;
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+.input-label i {
+    margin-right: 5px;
+    font-size: 20px;
+}
+
+.input-label:hover {
+    color: #0056b3;
+}
+
+.image-input {
+    max-height: 200px;
+}
+
+.image {
+    min-height: 200px;
 }
 </style>

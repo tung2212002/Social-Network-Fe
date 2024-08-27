@@ -24,3 +24,13 @@ export const createCommentChildService = async (id, body) => {
     const response = await request.apiAuth.post(`/api/v1/posts/comments/${id}`, body);
     return response;
 };
+
+export const editCommentService = async (id, body) => {
+    const response = await request.apiAuth.put(`/api/v1/posts/comments/${id}`, body);
+    return response;
+};
+
+export const deleteCommentService = async (id) => {
+    const response = await request.apiAuth.delete(`/api/v1/posts/comments/${id}`);
+    return response;
+};

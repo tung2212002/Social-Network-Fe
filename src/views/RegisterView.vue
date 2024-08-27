@@ -43,9 +43,9 @@
             </div>
 
             <div class="password_label">
-                <InputPassword
-                    v-model:value="account.password"
-                    toggleMask
+                <input
+                    v-model="account.password"
+                    type="password"
                     class="custom-input-password"
                     placeholder="Password"
                     required
@@ -53,9 +53,9 @@
                 />
             </div>
             <div class="password_label">
-                <InputPassword
-                    v-model:value="account.confirmPassword"
-                    toggleMask
+                <input
+                    v-model="account.confirmPassword"
+                    type="password"
                     class="custom-input-password"
                     placeholder="Confirm password"
                     required
@@ -109,7 +109,7 @@ const account = reactive({
 const regex = {
     password: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!*()]).{8,}$/,
     email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-    text: /^[a-zA-ZÀ-Ýà-ý]+$/,
+    text: /^[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF ]+$/u,
 };
 
 const activeDialog = ref(false);

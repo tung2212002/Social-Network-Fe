@@ -7,6 +7,7 @@ import { usePostStore } from '@/stores';
 import CreatePostHeaderComponent from './CreatePostHeaderComponent.vue';
 import TagUserPostComponent from './TagUserPostComponent.vue';
 import TagUserPostComponent2 from './TagUserPostComponent2.vue';
+import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 
 const usePost = usePostStore();
 const loading = computed(() => usePost.getIsLoadingHomePost);

@@ -1,8 +1,10 @@
-import { HomePage, AboutPage, LoginPage, RegisterPage } from '@/views';
+import { HomePage, AboutPage, LoginPage, RegisterPage, ChatPage } from '@/views';
 
 import route from '@/constants/route';
 import { OnlyContentLayout } from '@/layouts';
 import FriendShipView from '@/views/FriendShipView.vue';
+import ProfileUserView from '@/views/ProfileUserView.vue';
+import ChatView from '@/views/ChatView.vue';
 
 export const publicRoutes = [
     {
@@ -21,7 +23,19 @@ export const publicRoutes = [
     },
     {
         path: route.PROFILEPAGE,
-        component: RegisterPage,
+        component: ProfileUserView,
+        isPrivate: false,
+        restricted: false,
+    },
+    {
+        path: route.PROFILEPAGE1,
+        component: ProfileUserView,
+        isPrivate: false,
+        restricted: false,
+    },
+    {
+        path: route.CHATPAGE,
+        component: ChatPage,
         isPrivate: false,
         restricted: false,
     },

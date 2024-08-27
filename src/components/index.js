@@ -7,6 +7,8 @@ import SuggestFriendComponent from './SuggestFriendComponent.vue';
 import CreatePostHeaderComponent from './CreatePostHeaderComponent.vue';
 import EditPostComponent from './EditPostComponent.vue';
 import FriendShipComponent from './FriendShipComponent.vue';
+import ChatSideBarComponent from './ChatDetailComponent.vue';
+
 export {
     VerifyOtpRegisterComponent,
     LoadingComponent,
@@ -17,4 +19,5 @@ export {
     CreatePostHeaderComponent,
     EditPostComponent,
     FriendShipComponent,
+    ChatSideBarComponent,
 };

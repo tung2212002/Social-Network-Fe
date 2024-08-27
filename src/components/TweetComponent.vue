@@ -1,6 +1,6 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { computed, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import ThumbUpOutline from 'vue-material-design-icons/ThumbUpOutline.vue';
 import MessageOutline from 'vue-material-design-icons/MessageOutline.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
@@ -65,7 +65,6 @@ const handleDeletePost = () => {
     deltePostService(post.postId)
         .then((res) => {
             if (res.status == 200) {
-                // openDialog.value = false;
                 dialogStore.hidden();
                 postStore.removePost(post.postId);
                 toast.success('Xóa bài viết thành công', { timeout: 3000 });
@@ -343,8 +342,10 @@ const handleReaction = (reaction) => {
             v-if="openComment"
             :openComment="openComment"
             class="open-comment"
+            :post="post"
             :postId="post.postId"
             @update:openComment="openComment = $event"
+            @update:post="post = $event"
         />
     </div>
 </template>

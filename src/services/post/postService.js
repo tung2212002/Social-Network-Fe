@@ -35,3 +35,8 @@ export const reactionPostService = async (id, body) => {
     const response = await request.apiAuth.post(`/api/v1/reaction/post/${id}`, body);
     return response;
 };
+
+export const getListPostByUserIdService = async (id, params) => {
+    const response = await request.apiAuth.get(`/api/v1/posts/user/${id}`, { params });
+    return response;
+};

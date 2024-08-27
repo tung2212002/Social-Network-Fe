@@ -5,6 +5,7 @@ import { getFriendListService } from '@/services/friend/friendService';
 import { useDialogStore, useFriendshipStore } from '@/stores';
 import { computed } from 'vue';
 import { reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 
 const status = [
@@ -120,7 +121,10 @@ const unBlock = () => {
             console.error(err);
         });
 };
-
+const router = useRouter();
+const handleNavigateToProfile = (userId) => {
+    router.push(`/profile/${userId}`);
+};
 onMounted(() => {
     loadMoreBlocks();
 });
@@ -135,7 +139,7 @@ onMounted(() => {
         <div v-for="(friend, index) in listBlock" :key="friend.user.userId" class="friend-item">
             <img :src="friend.user.avatar || icons.defaultAvatar" alt="Avatar" class="friend-avatar" />
             <div class="friend-info">
-                <h3>{{ friend.user.firstName }} {{ friend.user.lastName }}</h3>
+                <h3 @click="handleNavigateToProfile(friend.user.userId)" style="cursor: pointer">{{ friend.user.firstName }} {{ friend.user.lastName }}</h3>
                 <p>{{ friend.user.userEmail }}</p>
                 <p v-if="friend.status === 'BLOCK'">Status: Chặn</p>
             </div>

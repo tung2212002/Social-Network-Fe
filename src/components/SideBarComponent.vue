@@ -1,8 +1,9 @@
 <script setup>
-import { useCreaPostStore } from '@/stores';
+import { useCreaPostStore, useUserStore } from '@/stores';
 import InfoButtonComponent from './InfoButtonComponent.vue';
 import MenuItem from './MenuItem.vue';
 import route from '@/constants/route';
+import { computed } from 'vue';
 
 const store = useCreaPostStore();
 
@@ -14,7 +15,7 @@ const menuItems = [
     { iconString: 'Home', route: '/' },
     { iconString: 'Explore', route: '/explore' },
     { iconString: 'Notifications', route: '/notifications' },
-    { iconString: 'Messages', route: '/messages' },
+    { iconString: 'Messages', route: '/chat' },
     { iconString: 'Profile', route: '/profile' },
     { iconString: 'Friends', route: route.FRIENDSHIPPAGE },
 ];

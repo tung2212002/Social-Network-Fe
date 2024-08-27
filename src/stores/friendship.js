@@ -66,7 +66,10 @@ export const useFriendshipStore = defineStore('friendship', {
             this.requested = this.requested.filter((requested) => requested.user.userId !== block.user.userId);
         },
         removeFriend(friendId) {
-            this.friends = this.friends.filter((friend) => friend.userId !== friendId);
+            console.log(friendId);
+            console.log(this.friends);
+            this.friends = this.friends.filter((friend) => friend.user.userId !== friendId);
+            console.log(this.friends);
         },
         removePending(pendingId) {
             this.pendings = this.pendings.filter((pending) => pending.user.userId !== pendingId);

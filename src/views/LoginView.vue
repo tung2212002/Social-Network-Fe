@@ -30,7 +30,7 @@
             </div>
 
             <div class="password_label">
-                <InputPassword v-model:value="state.password" toggleMask class="custom-input-password" placeholder="Mật khẩu" />
+                <input v-model="state.password" type="password" class="custom-input-password" placeholder="Mật khẩu" />
             </div>
 
             <div class="sign_up_buttons">
