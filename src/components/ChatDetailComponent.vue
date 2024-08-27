@@ -16,7 +16,8 @@ import {
   deleteMessagesService,
   recallMessagesService,
   typingMessagesService,
-  sendListImagesService
+  sendListImagesService,
+  readMessagesService
 } from '@/services/chat/messageService'
 import { ringCallService, rejectCallService } from '@/services/chat/callVideo'
 import { useToast } from 'vue-toastification';
@@ -790,6 +791,9 @@ const handleAddTagUser = (userId) => {
   }
 }
 
+const handelReadMessage = async () => {
+  await readMessagesService(messageList.value[messageList.value.length - 1].msgId)
+}
 
 // const displayMessage = computed({
 //   get() {
@@ -984,7 +988,7 @@ watch(
       <input v-model="newMessage" @input="(event) => {
         handlerTyping(props.chat.groupId);
         handlerTag(event.target.value);
-      }" @keyup.enter="sendMessage" placeholder="Nhập tin nhắn...">
+      }" @keyup.enter="sendMessage" @click="handelReadMessage" placeholder="Nhập tin nhắn...">
       <button @click="sendMessage" class="send-button">
         <i class="fa-solid fa-paper-plane"></i>
       </button>

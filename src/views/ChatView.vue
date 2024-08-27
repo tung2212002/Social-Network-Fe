@@ -1,8 +1,9 @@
 <script setup>
-import { ref, inject, computed, nextTick, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { groupService } from '@/services/chat/groupService';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import { searchService, searchFriendService } from '@/services/chat/searchService'
 import SidebarChatItem from '../components/ChatSideBarComponet.vue';
 import ChatDetailComponent from '../components/ChatDetailComponent.vue';
 
@@ -20,6 +21,7 @@ const searchMember = ref('');
 const allUsers = ref([]);
 // const currentUserId = 9; // ID người dùng hiện tại
 const selectedMembers = ref([]);
+const filteredUsers = ref([]);
 
 // const subscribeToWebSocket = () => {
 //   if (wsClient.value && wsClient.value.active) {
@@ -28,6 +30,10 @@ const selectedMembers = ref([]);
 //     });
 //   }
 // };
+
+const truncateMessage = (message, size) => {
+  return message.length > size ? message.slice(0, size) + '...' : message;
+};
 
 const fetchGroups = async () => {
   try {
@@ -39,7 +45,7 @@ const fetchGroups = async () => {
           groupId: data.groupId,
           groupName: data.groupName,
           groupType: data.groupType,
-          lastMessage: data.lastMessage || data.groupName,
+          lastMessage: truncateMessage(data.lastMessage || '', 26),
           groupBackground: data.groupBackground || "https://cdn-icons-png.flaticon.com/512/69/69589.png",
           lastActive: data.lastActive,
           messageUnreadCount: data.messageUnreadCount,
@@ -108,20 +114,20 @@ const createGroup = async () => {
 };
 
 const fetchUsers = async () => {
-  try {
-    const response = await axios.get('http://localhost:8080/api/v1/users');
-    allUsers.value = response.data;
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    toast.error('Không thể tải danh sách người dùng', { timeout: 3000 });
-  }
+  // try {
+  //   const response = await axios.get('http://localhost:8080/api/v1/users');
+  //   allUsers.value = response.data;
+  // } catch (error) {
+  //   console.error('Error fetching users:', error);
+  //   toast.error('Không thể tải danh sách người dùng', { timeout: 3000 });
+  // }
 };
 
-const filteredUsers = computed(() => {
-  return allUsers.value.filter(user =>
-    user.username.toLowerCase().includes(searchMember.value.toLowerCase())
-  );
-});
+// const filteredUsers = computed(() => {
+//   // return allUsers.value.filter(user =>
+//   //   user.username.toLowerCase().includes(searchMember.value.toLowerCase())
+//   // );
+// });
 
 const toggleMember = (userId) => {
   const index = selectedMembers.value.indexOf(userId);
@@ -137,6 +143,36 @@ const toggleMember = (userId) => {
 //     subscribeToWebSocket();
 //   });
 // })
+
+watch(searchMember, async (newValue) => {
+  if (newValue.trim()) {
+    try {
+      const response = await searchService(newValue);
+      allUsers.value = response.data;
+    } catch (error) {
+      toast.error('Không thể tìm kiếm người dùng', { timeout: 3000 });
+    }
+  } else {
+    allUsers.value = [];
+  }
+});
+
+watch(searchMember, async (newValue) => {
+  if (newValue.trim()) {
+    try {
+      const response = await searchFriendService(newValue);
+      console.log(response.data);
+
+      filteredUsers.value = response.data;
+    } catch (error) {
+      toast.error('Không thể tìm kiếm người dùng', { timeout: 3000 });
+    }
+  } else {
+    allUsers.value = [];
+  }
+});
+
+
 </script>
 
 <template>

@@ -43,3 +43,8 @@ export const sendListImagesService = async (groupId, formData) => {
         throw error;
     }
 };
+
+export const readMessagesService = async (msgId) => {
+    const response = await request.apiAuth.put(`/api/v1/chat/messages/read/${msgId}`);
+    return response;
+};
