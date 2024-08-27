@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, inject, watch, nextTick } from 'vue';
 import { groupService } from '@/services/chat/groupService';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
@@ -11,7 +11,7 @@ const toast = useToast();
 const chats = ref([]);
 const isLoading = ref(true);
 
-// const wsClient = inject('wsClient'); // Kết nối với WebSocket
+const wsClient = inject('wsClient');
 const selectedChat = ref(null);
 const searchQuery = ref('');
 const showCreateGroupDialog = ref(false);
@@ -19,17 +19,17 @@ const newGroupName = ref('');
 const newGroupType = ref('GROUP_PUBLIC');
 const searchMember = ref('');
 const allUsers = ref([]);
-// const currentUserId = 9; // ID người dùng hiện tại
+const currentUserId = 9;
 const selectedMembers = ref([]);
 const filteredUsers = ref([]);
 
-// const subscribeToWebSocket = () => {
-//   if (wsClient.value && wsClient.value.active) {
-//     wsClient.value.subscribe(`/channel/app/${currentUserId}`, (message) => {
-//       fetchGroups()
-//     });
-//   }
-// };
+const subscribeToWebSocket = () => {
+  if (wsClient.value && wsClient.value.active) {
+    wsClient.value.subscribe(`/channel/app/${currentUserId}`, () => {
+      fetchGroups()
+    });
+  }
+};
 
 const truncateMessage = (message, size) => {
   return message.length > size ? message.slice(0, size) + '...' : message;
@@ -41,17 +41,20 @@ const fetchGroups = async () => {
     if (res.status === 200) {
       const datas = res.data.data;
       if (Array.isArray(datas)) {
-        chats.value = datas.map(data => ({
-          groupId: data.groupId,
-          groupName: data.groupName,
-          groupType: data.groupType,
-          lastMessage: truncateMessage(data.lastMessage || '', 26),
-          groupBackground: data.groupBackground || "https://cdn-icons-png.flaticon.com/512/69/69589.png",
-          lastActive: data.lastActive,
-          messageUnreadCount: data.messageUnreadCount,
-          online: data.online,
-          inGroup: data.inGroup
-        }));
+        chats.value = datas
+          .map(data => ({
+            groupId: data.groupId,
+            groupName: data.groupName,
+            groupType: data.groupType,
+            lastMessage: truncateMessage(data.lastMessage || '', 26),
+            groupBackground: data.groupBackground || "https://cdn-icons-png.flaticon.com/512/69/69589.png",
+            lastMsgTime: data.lastMessageTime,
+            lastActive: data.lastActive,
+            messageUnreadCount: data.messageUnreadCount,
+            online: data.online,
+            inGroup: data.inGroup
+          }))
+          .sort((a, b) => new Date(b.lastMsgTime) - new Date(a.lastMsgTime)); // Sort in descending order by lastMsgTime
       } else {
         console.error("Expected an array but got", datas);
       }
@@ -73,6 +76,26 @@ const filteredChats = computed(() => {
     chat.groupName.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 });
+
+const search = async (query) => {
+  if (query.trim()) {
+    try {
+      const response = await searchFriendService(query);
+      console.log(response.data);
+      chats.value = response.data;
+    } catch (error) {
+      toast.error('Không thể tìm kiếm người dùng', { timeout: 3000 });
+    }
+  } else {
+    chats.value = [];
+  }
+};
+
+watch(searchQuery, (newValue) => {
+  search(newValue);
+});
+
+search('');
 
 const selectChat = (groupId) => {
   selectedChat.value = chats.value.find(chat => chat.groupId === groupId);
@@ -138,11 +161,11 @@ const toggleMember = (userId) => {
   }
 };
 
-// onMounted(() => {
-//   nextTick(() => {
-//     subscribeToWebSocket();
-//   });
-// })
+onMounted(() => {
+  nextTick(() => {
+    subscribeToWebSocket();
+  });
+})
 
 watch(searchMember, async (newValue) => {
   if (newValue.trim()) {
@@ -156,22 +179,6 @@ watch(searchMember, async (newValue) => {
     allUsers.value = [];
   }
 });
-
-watch(searchMember, async (newValue) => {
-  if (newValue.trim()) {
-    try {
-      const response = await searchFriendService(newValue);
-      console.log(response.data);
-
-      filteredUsers.value = response.data;
-    } catch (error) {
-      toast.error('Không thể tìm kiếm người dùng', { timeout: 3000 });
-    }
-  } else {
-    allUsers.value = [];
-  }
-});
-
 
 </script>
 
